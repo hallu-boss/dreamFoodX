@@ -5,3 +5,7 @@
 .btn {
   @apply px-2 py-1 rounded-md font-medium text-white bg-plant-400 hover:bg-plant-500 transition;
 }
+
+.ico-btn {
+  @apply w-6 h-6 text-gray-500 hover:text-gray-600
+}
