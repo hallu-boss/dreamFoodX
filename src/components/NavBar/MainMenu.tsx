@@ -7,7 +7,7 @@ interface MainMenuProps {
 function MainMenu({items}: MainMenuProps) {
 
     return (
-        <ul className="flex items-center gap-[3vw] font-light text-gray-500">
+        <ul className="flex md:flex-row flex-col md:items-center md:gap-[3vw] gap-6 md:font-light font-medium text-gray-500">
           {items.map((item, index) =>(
             <li key={index}>
               <a className="hover:text-gray-700" href={item.href}>
