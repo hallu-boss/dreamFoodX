@@ -1,18 +1,22 @@
-import Auth from "./components/Auth";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Home from "../src/pages/Home"
+import Profile from "../src/pages/Profile"
 import NavBar from "./components/NavBar/NavBar";
-import { useAuth } from "./hooks/useAuth";
+import NewRecipe from "./pages/NewRecipe";
 
 function App() {
-  const user = useAuth();
 
   return (
-    <>
-      <NavBar logoPath="src/assets/logo-text-v2.svg" />
-      <div>
-        {user ? <p>Zalogowany jako: {user.email}</p> : <p>Nie zalogowany</p>}
-      </div>
-      <Auth />
-    </>
+    <Router>
+
+      <NavBar logoPath="src/assets/logo-text-v2.svg"/>
+
+      <Routes> 
+        <Route path="/" element={<Home />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/newrecipe" element={<NewRecipe />} />
+      </Routes>
+    </Router>
   );
 }
 

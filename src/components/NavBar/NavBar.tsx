@@ -2,6 +2,7 @@ import { Menu, Search, ShoppingCart, User, X } from "lucide-react";
 import { MenuItem } from "../../types/menuItem";
 import MainMenu from "./MainMenu";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 interface NavBarProps {
   logoPath: string;
@@ -17,6 +18,7 @@ const mainMenuItems: MenuItem[] = [
 function NavBar({ logoPath }: NavBarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const showNewRecepieBtn = true;
+  const navigate = useNavigate();
 
   return (
     <header className="bg-white shadow-md">
@@ -32,7 +34,7 @@ function NavBar({ logoPath }: NavBarProps) {
             onClick={() => setIsMenuOpen(false)}
           />
         )}
-        <a href="#">
+        <a href="/">
           <img
             src={logoPath}
             className="hover:scale-105 transition-all align-top min-w-[160px]"
@@ -48,13 +50,13 @@ function NavBar({ logoPath }: NavBarProps) {
         </div>
         <div className="flex items-center justify-end md:min-w-[230px]">
           {showNewRecepieBtn && (
-            <button className="btn md:flex hidden right-full mr-5">
+            <button className="btn md:flex hidden right-full mr-5" onClick={() => navigate("/newrecipe")}>
               Nowy przepis
             </button>
           )}
           <div className="flex items-center gap-2">
             <ShoppingCart className="ico-btn" />
-            <User className="ico-btn" />
+            <User className="ico-btn" onClick={() => navigate("/profile")} />
             <Search className="ico-btn" />
           </div>
         </div>
