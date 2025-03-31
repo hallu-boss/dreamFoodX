@@ -6,6 +6,7 @@
   @apply px-2 py-1 rounded-md font-medium text-white bg-plant-400 hover:bg-plant-500 transition;
 }
 
+
 .ico-btn {
   @apply w-6 h-6 text-gray-500 hover:text-gray-600 cursor-pointer;
 }
@@ -18,6 +19,10 @@
   --tw-text-opacity: 1;
   color: rgb(bg-plant-400);
   
+}
+
+.btn-size{
+  @apply  w-[25%] h-[35%] my-[0.5%]
 }
 
 .header-text {

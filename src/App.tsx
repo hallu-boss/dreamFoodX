@@ -2,8 +2,10 @@ import Auth from "./components/Auth";
 import NavBar from "./components/NavBar/NavBar";
 import { useAuth } from "./hooks/useAuth";
 import {UserLogin} from "./types/dataUser"
+import {MainView} from "./components/mainView"
 
 const userLogedIn = new UserLogin("User1234", 15, 8, "example@example.com", true);
+// const userLogedIn = null;
 
 function App() {
   const user = useAuth();
@@ -14,14 +16,10 @@ function App() {
 
       {userLogedIn ? 
       <div>
-        <p className="header-text">Strona główna</p>
-        
+        <MainView userLogedIn={userLogedIn} />
       </div>
       :
-       <div> 
-        <div>
-        {userLogedIn && <p >Zalogowany jako: {userLogedIn.email}</p>}
-        </div>
+      <div>   
         <Auth />
       </div>}
       
