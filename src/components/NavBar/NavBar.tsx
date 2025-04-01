@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 
 interface NavBarProps {
   logoPath: string;
+  showNewRecipeBtn: boolean;
 }
 
 const mainMenuItems: MenuItem[] = [
@@ -15,10 +16,14 @@ const mainMenuItems: MenuItem[] = [
   { label: "Kategorie", href: "#" },
 ];
 
-function NavBar({ logoPath }: NavBarProps) {
+function NavBar({ logoPath, showNewRecipeBtn: showButton }: NavBarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const showNewRecepieBtn = true;
   const navigate = useNavigate();
+
+  const profileAction = () => navigate("/profile");
+  const shopingCartAction = undefined;
+  const searchAction = undefined;
+  const newRecipeBtnAction = () => navigate("/newrecipe");
 
   return (
     <header className="bg-white shadow-md">
@@ -49,15 +54,18 @@ function NavBar({ logoPath }: NavBarProps) {
           <MainMenu items={mainMenuItems} />
         </div>
         <div className="flex items-center justify-end md:min-w-[230px]">
-          {showNewRecepieBtn && (
-            <button className="btn md:flex hidden right-full mr-5" onClick={() => navigate("/newrecipe")}>
+          {showButton && (
+            <button
+              className="btn md:flex hidden right-full mr-5"
+              onClick={newRecipeBtnAction}
+            >
               Nowy przepis
             </button>
           )}
           <div className="flex items-center gap-2">
-            <ShoppingCart className="ico-btn" />
-            <User className="ico-btn" onClick={() => navigate("/profile")} />
-            <Search className="ico-btn" />
+            <ShoppingCart className="ico-btn" onClick={shopingCartAction} />
+            <User className="ico-btn" onClick={profileAction} />
+            <Search className="ico-btn" onClick={searchAction} />
           </div>
         </div>
       </nav>
