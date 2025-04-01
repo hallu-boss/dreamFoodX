@@ -1,11 +1,15 @@
+import { Ingredient } from "./ingredient";
 import { RecipeReview, Rating } from "./recipeReview";
 import { RecipeStep } from "./recipeStep";
 
 export interface Recipe {
-    recipeSteps: RecipeStep[];
+    title: string;
+    imgSrc: string;
     creator: string;
-    rating: Rating;
+    ingridients: Ingredient[];
+    recipeSteps: RecipeStep[];
     categories: string[];
     price: number;
+    rating: Rating;
     reviews: RecipeReview;
 }
