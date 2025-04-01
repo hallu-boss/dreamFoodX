@@ -6,6 +6,27 @@
   @apply px-2 py-1 rounded-md font-medium text-white bg-plant-400 hover:bg-plant-500 transition;
 }
 
+
 .ico-btn {
-  @apply w-6 h-6 text-gray-500 hover:text-gray-600 cursor-pointer
+  @apply w-6 h-6 text-gray-500 hover:text-gray-600 cursor-pointer;
+}
+
+.in-box {
+  @apply w-4/5 mx-auto rounded-md my-4 flex items-center border-2 border-black p-2 shadow-lg;
+}
+
+.text-plant-400 {
+  --tw-text-opacity: 1;
+  color: rgb(bg-plant-400);
+  
+}
+
+.btn-size{
+  @apply  w-[25%] h-[35%] my-[0.5%]
+}
+
+.header-text {
+  @apply text-plant-400 my-[3%] text-center text-4xl font-sans font-bold;
+  font-family: Arial, sans-serif;
+  
 }
