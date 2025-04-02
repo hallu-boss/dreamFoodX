@@ -5,10 +5,8 @@ import { signIn, signUp, logOut } from "../services/auth";
 
 
 const LoginPage = (
-    { preliminaryLogin }:
-     { preliminaryLogin: (email: string) => void }) => 
-        {
-  
+    { preliminaryLogin, logoutUser }: { preliminaryLogin: (email: string) => void, logoutUser: () => void }
+) => {
   
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -37,6 +35,16 @@ const LoginPage = (
     }
   };
 
+  const handleLogOut= async () => {
+    try {
+      await logOut();
+      logoutUser();
+        
+    } catch (err) {
+      setError("Błąd logowania: " + err);
+    }
+  };
+
   return (
     <div>
       <h2 className="header-text">Logowanie</h2>
@@ -60,7 +68,7 @@ const LoginPage = (
 
         
         <div className="flex justify-center">
-          <button className="btn btn-size tems-center" onClick={logOut}>
+          <button className="btn btn-size tems-center" onClick={handleLogOut}>
               Wyloguj
           </button>
         </div>

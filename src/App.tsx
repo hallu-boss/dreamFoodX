@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "../src/pages/Home";
-import Profile from "../src/pages/Profile";
+// import Profile from "../src/pages/Profile";
 import NavBar from "./components/NavBar/NavBar";
 import NewRecipe from "./pages/NewRecipe";
 import useUserData from "./hooks/useUserData";
@@ -11,7 +11,8 @@ function App() {
   const {
           userData,
           setUserData,
-          preliminaryLogin
+          preliminaryLogin,
+          logOut
         } = useUserData();
   
 
@@ -21,7 +22,7 @@ function App() {
 
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/profile" element={<LoginPage preliminaryLogin={preliminaryLogin}/>} />
+        <Route path="/profile" element={<LoginPage preliminaryLogin={preliminaryLogin} logoutUser={logOut}/>} />
         <Route path="/newrecipe" element={<NewRecipe />} />
       </Routes>
     </Router>
