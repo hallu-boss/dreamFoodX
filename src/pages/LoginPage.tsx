@@ -1,19 +1,20 @@
 // src//LoginPage.tsx
 import { useState } from "react";
 import { signIn, signUp, logOut } from "../services/auth";
-import useUserData from "../hooks/useUserData";
 
 
-const LoginPage = () => {
+
+const LoginPage = (
+    { preliminaryLogin }:
+     { preliminaryLogin: (email: string) => void }) => 
+        {
+  
+  
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   
-  const {
-          userData,
-          setUserData,
-          preliminaryLogin
-        } = useUserData();
+  
         
 
   const handleSignUp = async () => {
@@ -29,7 +30,7 @@ const LoginPage = () => {
     try {
       await signIn(email, password);
       preliminaryLogin(email);
-      console.log("HOOK DATA:", { userData, setUserData, preliminaryLogin });
+    //   console.log("HOOK DATA:", { userData, setUserData, preliminaryLogin });
       alert("Zalogowano!");
     } catch (err) {
       setError("Błąd logowania: " + err);
