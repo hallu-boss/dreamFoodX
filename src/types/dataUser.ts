@@ -18,8 +18,11 @@ export class UserLogin implements UserInterface {
     readonly countRecipe: number,
     readonly coockingHours: number,
     readonly email: string,
-    public isLoggedIn: boolean,
+    private isLoggedIn: boolean,
   ) {}
 
-  
+  checkLoginStatus():boolean {
+    console.log('Użytkownik: ${this.isLoggedIn?"zalogowany" : "niezalogowany"}');
+    return this.isLoggedIn;
+  }
 }
