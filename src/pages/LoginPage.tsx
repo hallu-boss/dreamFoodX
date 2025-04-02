@@ -1,12 +1,20 @@
-// src/components/Auth.tsx
+// src//LoginPage.tsx
 import { useState } from "react";
 import { signIn, signUp, logOut } from "../services/auth";
+import useUserData from "../hooks/useUserData";
 
 
-const Auth = () => {
+const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  
+  const {
+          userData,
+          setUserData,
+          preliminaryLogin
+        } = useUserData();
+        
 
   const handleSignUp = async () => {
     try {
@@ -20,6 +28,8 @@ const Auth = () => {
   const handleSignIn = async () => {
     try {
       await signIn(email, password);
+      preliminaryLogin(email);
+      console.log("HOOK DATA:", { userData, setUserData, preliminaryLogin });
       alert("Zalogowano!");
     } catch (err) {
       setError("Błąd logowania: " + err);
@@ -47,17 +57,17 @@ const Auth = () => {
           </button>
         </div>
 
-{/*         
+        
         <div className="flex justify-center">
           <button className="btn btn-size tems-center" onClick={logOut}>
               Wyloguj
           </button>
         </div>
-       */}
+      
       
       {error && <p style={{ color: "red" }}>{error}</p>}
     </div>
   );
 };
 
-export default Auth;
+export default LoginPage;
