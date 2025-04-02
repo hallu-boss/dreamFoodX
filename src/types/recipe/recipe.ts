@@ -12,4 +12,6 @@ export interface Recipe {
     price: number;
     rating: Rating;
     reviews: RecipeReview;
+    keywords: string[];
+    createdAt: Date;
 }

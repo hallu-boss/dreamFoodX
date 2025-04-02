@@ -3,11 +3,13 @@ import { MenuItem } from "../../types/menuItem";
 import MainMenu from "./MainMenu";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { loadRecipes } from "../../api/recipe";
 
 interface NavBarProps {
   logoPath: string;
   showNewRecipeBtn: boolean;
 }
+
 
 const mainMenuItems: MenuItem[] = [
   { label: "Wyróżnione", href: "#" },
@@ -21,7 +23,7 @@ function NavBar({ logoPath, showNewRecipeBtn: showButton }: NavBarProps) {
   const navigate = useNavigate();
 
   const profileAction = () => navigate("/profile");
-  const shopingCartAction = undefined;
+  const shopingCartAction = () => loadRecipes();
   const searchAction = undefined;
   const newRecipeBtnAction = () => navigate("/newrecipe");
 
