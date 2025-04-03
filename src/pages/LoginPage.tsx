@@ -1,4 +1,3 @@
-// src//LoginPage.tsx
 import { useState } from "react";
 import { signIn, signUp, logOut } from "../services/auth";
 
