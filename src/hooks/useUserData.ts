@@ -1,10 +1,9 @@
 import { useState, useEffect  } from "react";
-import UserData from "../types/UserData"; // Upewnij się, że ścieżka do pliku jest poprawna
+import UserData from "../types/UserData";
 
 export default function useUserData() {
     const [userData, setUserData] = useState<UserData>(new UserData());
 
-    // Inicjalizowanie userData z localStorage przy starcie aplikacji
     useEffect(() => {
         // Odczyt danych użytkownika z localStorage
         const savedUserData = localStorage.getItem('userData');
