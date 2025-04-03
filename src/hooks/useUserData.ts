@@ -1,8 +1,11 @@
 import { useState, useEffect  } from "react";
 import UserData from "../types/UserData"; // Upewnij się, że ścieżka do pliku jest poprawna
 
+
+
 export default function useUserData() {
     const [userData, setUserData] = useState<UserData>(new UserData());
+    
 
     // Inicjalizowanie userData z localStorage przy starcie aplikacji
     useEffect(() => {
@@ -22,12 +25,15 @@ export default function useUserData() {
 
     const preliminaryLogin = (email: string) => {
         setUserData(prev => {
-            const updatedUser = new UserData(prev.name, prev.surname, prev.email, prev.cookingHours);
+            const updatedUser = new UserData("Test", "Tester", prev.email, 1234);
             updatedUser.login(email); 
+            // TODO: pobranie danych o użytkowniku z bazy danych
+
+
 
             // Zapisz dane użytkownika do localStorage
             localStorage.setItem('userData', JSON.stringify(updatedUser));
-
+             
             return updatedUser;
         });
     };
