@@ -2,28 +2,25 @@ import { Menu, Search, ShoppingCart, User, X } from "lucide-react";
 import { MenuItem } from "../../types/menuItem";
 import MainMenu from "./MainMenu";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 
 interface NavBarProps {
   logoPath: string;
+  logoHref: string;
+  menu: MenuItem[];
+  profileBtnAction: () => void;
+  shoppingCartAction: () => void;
+  searchBtnAction: () => void;
+  newRecipeBtnAction: () => void;
   showNewRecipeBtn: boolean;
 }
 
-const mainMenuItems: MenuItem[] = [
-  { label: "Wyróżnione", href: "#" },
-  { label: "Nowe", href: "#" },
-  { label: "Popularne", href: "#" },
-  { label: "Kategorie", href: "#" },
-];
-
-function NavBar({ logoPath, showNewRecipeBtn: showButton }: NavBarProps) {
+function NavBar({ logoPath, logoHref, menu, profileBtnAction, shoppingCartAction, searchBtnAction, newRecipeBtnAction, showNewRecipeBtn, }: NavBarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const navigate = useNavigate();
 
-  const profileAction = () => navigate("/profile");
-  const shopingCartAction = undefined;
-  const searchAction = undefined;
-  const newRecipeBtnAction = () => navigate("/newrecipe");
+  // const profileAction = () => navigate("/profile");
+  // const shopingCartAction = undefined;
+  // const searchAction = undefined;
+  // const newRecipeBtnAction = () => navigate("/newrecipe");
 
   return (
     <header className="bg-white shadow-md">
@@ -39,7 +36,7 @@ function NavBar({ logoPath, showNewRecipeBtn: showButton }: NavBarProps) {
             onClick={() => setIsMenuOpen(false)}
           />
         )}
-        <a href="/">
+        <a href={logoHref}>
           <img
             src={logoPath}
             className="hover:scale-105 transition-all align-top min-w-[160px]"
@@ -51,10 +48,10 @@ function NavBar({ logoPath, showNewRecipeBtn: showButton }: NavBarProps) {
             ${isMenuOpen ? "top-[6%]" : "top-[-100%]"}
           `}
         >
-          <MainMenu items={mainMenuItems} />
+          <MainMenu items={menu} />
         </div>
         <div className="flex items-center justify-end md:min-w-[230px]">
-          {showButton && (
+          {showNewRecipeBtn && (
             <button
               className="btn md:flex hidden right-full mr-5"
               onClick={newRecipeBtnAction}
@@ -63,9 +60,9 @@ function NavBar({ logoPath, showNewRecipeBtn: showButton }: NavBarProps) {
             </button>
           )}
           <div className="flex items-center gap-2">
-            <ShoppingCart className="ico-btn" onClick={shopingCartAction} />
-            <User className="ico-btn" onClick={profileAction} />
-            <Search className="ico-btn" onClick={searchAction} />
+            <ShoppingCart className="ico-btn" onClick={shoppingCartAction} />
+            <User className="ico-btn" onClick={profileBtnAction} />
+            <Search className="ico-btn" onClick={searchBtnAction} />
           </div>
         </div>
       </nav>
