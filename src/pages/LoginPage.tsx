@@ -1,12 +1,18 @@
-// src/components/Auth.tsx
 import { useState } from "react";
 import { signIn, signUp, logOut } from "../services/auth";
 
 
-const Auth = () => {
+
+const LoginPage = (
+    { preliminaryLogin, logoutUser }: { preliminaryLogin: (email: string) => void, logoutUser: () => void }
+) => {
+  
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  
+  
+        
 
   const handleSignUp = async () => {
     try {
@@ -20,7 +26,19 @@ const Auth = () => {
   const handleSignIn = async () => {
     try {
       await signIn(email, password);
+      preliminaryLogin(email);
+    //   console.log("HOOK DATA:", { userData, setUserData, preliminaryLogin });
       alert("Zalogowano!");
+    } catch (err) {
+      setError("Błąd logowania: " + err);
+    }
+  };
+
+  const handleLogOut= async () => {
+    try {
+      await logOut();
+      logoutUser();
+        
     } catch (err) {
       setError("Błąd logowania: " + err);
     }
@@ -47,17 +65,17 @@ const Auth = () => {
           </button>
         </div>
 
-{/*         
+        
         <div className="flex justify-center">
-          <button className="btn btn-size tems-center" onClick={logOut}>
+          <button className="btn btn-size tems-center" onClick={handleLogOut}>
               Wyloguj
           </button>
         </div>
-       */}
+      
       
       {error && <p style={{ color: "red" }}>{error}</p>}
     </div>
   );
 };
 
-export default Auth;
+export default LoginPage;
