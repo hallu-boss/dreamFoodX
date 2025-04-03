@@ -1,7 +1,7 @@
 // src//LoginPage.tsx
 import { useState } from "react";
 import { signIn, signUp, logOut } from "../services/auth";
-
+import { useNavigate } from 'react-router-dom';
 
 
 const LoginPage = (
@@ -12,6 +12,7 @@ const LoginPage = (
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   
+  const navigate = useNavigate();
   
         
 
@@ -28,8 +29,9 @@ const LoginPage = (
     try {
       await signIn(email, password);
       preliminaryLogin(email);
-    //   console.log("HOOK DATA:", { userData, setUserData, preliminaryLogin });
+      
       alert("Zalogowano!");
+      navigate('/')
     } catch (err) {
       setError("Błąd logowania: " + err);
     }
