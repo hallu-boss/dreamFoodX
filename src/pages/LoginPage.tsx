@@ -1,25 +1,25 @@
 // src//LoginPage.tsx
 import { useState } from "react";
-import { signIn, signUp, logOut } from "../services/auth";
+import { signIn, signUp } from "../services/auth";
+import {actionButton} from '../components/renderable_elements'
 import { useNavigate } from 'react-router-dom';
 
-
 const LoginPage = (
-    { preliminaryLogin, logoutUser }: { preliminaryLogin: (email: string) => void, logoutUser: () => void }
+    { preliminaryLogin }: { preliminaryLogin: (email: string) => void }
 ) => {
   
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const navigate = useNavigate(); // wykorzystywane do przenoszenia się na stronę główną przy logowaniu / wylogowaniu
+
   
-  const navigate = useNavigate();
-  
-        
 
   const handleSignUp = async () => {
     try {
       await signUp(email, password);
       alert("Zarejestrowano!");
+      navigate('/')
     } catch (err) {
       setError("Błąd rejestracji: " + err);
     }
@@ -29,54 +29,30 @@ const LoginPage = (
     try {
       await signIn(email, password);
       preliminaryLogin(email);
-      
       alert("Zalogowano!");
       navigate('/')
+      
     } catch (err) {
       setError("Błąd logowania: " + err);
     }
   };
 
-  const handleLogOut= async () => {
-    try {
-      await logOut();
-      logoutUser();
-        
-    } catch (err) {
-      setError("Błąd logowania: " + err);
-    }
-  };
+  
 
   return (
-    <div>
+    <div className="page-color">
+      {error && <p style={{ color: "red" }}>{error}</p>}
+
       <h2 className="header-text">Logowanie</h2>
-    
       <input className="in-box"
        type="email" placeholder="Email" onChange={(e) => setEmail(e.target.value)} />
       <input className="in-box" 
         type="password" placeholder="Hasło" onChange={(e) => setPassword(e.target.value)} />
 
-        <div className="flex justify-center">
-          <button className="btn btn-size tems-center" onClick={handleSignUp}>
-                Zarejestruj
-          </button>
-        </div>
 
-        <div className="flex justify-center">
-          <button className="btn btn-size items-center" onClick={handleSignIn}>
-              Zaloguj
-          </button>
-        </div>
+        {actionButton("Zaloguj", handleSignIn)}
+        {actionButton("Zarejestruj", handleSignUp)}
 
-        
-        <div className="flex justify-center">
-          <button className="btn btn-size tems-center" onClick={handleLogOut}>
-              Wyloguj
-          </button>
-        </div>
-      
-      
-      {error && <p style={{ color: "red" }}>{error}</p>}
     </div>
   );
 };

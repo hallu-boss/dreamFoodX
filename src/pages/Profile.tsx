@@ -1,27 +1,30 @@
 import LoginPage from "./LoginPage";
 import UserData from "../types/UserData";
+import ProfilePage from "./ProfilePage";
 
 function Profile (
     { userData,
         preliminaryLogin, 
-        logoutUser }: 
-        
-        {userData:UserData,
-             preliminaryLogin: (email: string) => void,
-              logoutUser: () => void }
+        logoutUser 
+    }
+        : 
+        {
+        userData:UserData,
+        preliminaryLogin: (email: string) => void,
+        logoutUser: () => void }
 ) {
     let content;
 
     if (!userData.checkLoginStatus()) {
         content = (
             <div>
-                <LoginPage preliminaryLogin={preliminaryLogin} logoutUser={logoutUser} />
+                <LoginPage preliminaryLogin={preliminaryLogin}  />
             </div>
         );
     } else {
         content = (
-            <div>
-                <p>profile users</p>
+            <div >
+                <ProfilePage userData = {userData} logoutUser={logoutUser} />
             </div>
         );
     }
