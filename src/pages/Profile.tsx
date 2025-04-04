@@ -1,20 +1,30 @@
-import { UserLogin } from "../types/dataUser";
-import Auth from "../components/Auth";
+import LoginPage from "./LoginPage";
+import UserData from "../types/UserData";
+import ProfilePage from "./ProfilePage";
 
-
-function Profile ({userLogged} : {userLogged:UserLogin}) {
+function Profile (
+    { userData,
+        preliminaryLogin, 
+        logoutUser 
+    }
+        : 
+        {
+        userData:UserData,
+        preliminaryLogin: (email: string) => void,
+        logoutUser: () => void }
+) {
     let content;
 
-    if (!userLogged.checkLoginStatus()) {
+    if (!userData.checkLoginStatus()) {
         content = (
             <div>
-                <Auth />
+                <LoginPage preliminaryLogin={preliminaryLogin}  />
             </div>
         );
     } else {
         content = (
-            <div>
-                <p>profile users</p>
+            <div >
+                <ProfilePage userData = {userData} logoutUser={logoutUser} />
             </div>
         );
     }

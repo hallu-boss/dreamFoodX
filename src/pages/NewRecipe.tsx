@@ -2,7 +2,7 @@ function NewRecipe () {
 
     return (
         <>
-            <div>
+            <div className="page-color">
                 newRecipe
             </div>
         </>

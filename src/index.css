@@ -30,3 +30,9 @@
   font-family: Arial, sans-serif;
   
 }
+
+.page-color {
+  background-color: #faf1e6;
+  min-height: 100vh;
+  padding: 40px;
+}
