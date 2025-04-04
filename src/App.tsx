@@ -5,29 +5,29 @@ import NewRecipe from "./pages/NewRecipe";
 import useUserData from "./hooks/useUserData";
 import LoginPage from "./pages/LoginPage";
 import ProfilePage from "./pages/ProfilePage";
+import CartPage from "./pages/CartPage";
 
 function App() {
-  const {
-          userData,
-          preliminaryLogin,
-          logOut
-        } = useUserData();
-  
+  const { userData, preliminaryLogin, logOut } = useUserData();
 
   return (
     <Router>
-      
-      <NavBar logoPath="src/assets/logo-text-v2.svg" showNewRecipeBtn={userData.checkLoginStatus()} />
-      
+      <NavBar logoPath="src/assets/logo-text-v2.svg" logoHref="/" />
+
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/profile" element={<ProfilePage userData={userData} logoutUser={logOut}/>} />
-        <Route path="/login" element={<LoginPage preliminaryLogin={preliminaryLogin}/>} />
+        <Route
+          path="/profile"
+          element={<ProfilePage userData={userData} logoutUser={logOut} />}
+        />
+        <Route
+          path="/login"
+          element={<LoginPage preliminaryLogin={preliminaryLogin} />}
+        />
         <Route path="/new-recipe" element={<NewRecipe />} />
+        <Route path="/cart" element={<CartPage />} />
       </Routes>
-      
     </Router>
-
   );
 }
 

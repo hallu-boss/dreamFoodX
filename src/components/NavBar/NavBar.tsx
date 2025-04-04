@@ -2,25 +2,42 @@ import { Menu, Search, ShoppingCart, User, X } from "lucide-react";
 import { MenuItem } from "../../types/menuItem";
 import MainMenu from "./MainMenu";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import useUserData from "../../hooks/useUserData";
 
 interface NavBarProps {
   logoPath: string;
   logoHref: string;
-  menu: MenuItem[];
-  profileBtnAction: () => void;
-  shoppingCartAction: () => void;
-  searchBtnAction: () => void;
-  newRecipeBtnAction: () => void;
-  showNewRecipeBtn: boolean;
 }
 
-function NavBar({ logoPath, logoHref, menu, profileBtnAction, shoppingCartAction, searchBtnAction, newRecipeBtnAction, showNewRecipeBtn, }: NavBarProps) {
+function NavBar({ logoPath, logoHref }: NavBarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const {userData} = useUserData();
 
-  // const profileAction = () => navigate("/profile");
-  // const shopingCartAction = undefined;
-  // const searchAction = undefined;
-  // const newRecipeBtnAction = () => navigate("/newrecipe");
+  const navigate = useNavigate();
+
+  const menu: MenuItem[] = [
+    { label: "Wyróżnione", href: "#" },
+    { label: "Nowe", href: "#" },
+    { label: "Popularne", href: "#" },
+    { label: "Kategorie", href: "#" },
+  ];
+
+  function goToProfile() {
+    navigate(userData.isLoggedIn ? "/profile" : "/login");
+  }
+
+  function goToCart() {
+    navigate(userData.isLoggedIn ? "/cart" : "/login");
+  }
+
+  function newRecipe() {
+    navigate(userData.isLoggedIn ? "/new-recipe" : "/login");
+  }
+
+  function search() {
+    return;
+  }
 
   return (
     <header className="bg-white shadow-md">
@@ -51,18 +68,18 @@ function NavBar({ logoPath, logoHref, menu, profileBtnAction, shoppingCartAction
           <MainMenu items={menu} />
         </div>
         <div className="flex items-center justify-end md:min-w-[230px]">
-          {showNewRecipeBtn && (
+          {userData.isLoggedIn && (
             <button
               className="btn md:flex hidden right-full mr-5"
-              onClick={newRecipeBtnAction}
+              onClick={newRecipe}
             >
               Nowy przepis
             </button>
           )}
           <div className="flex items-center gap-2">
-            <ShoppingCart className="ico-btn" onClick={shoppingCartAction} />
-            <User className="ico-btn" onClick={profileBtnAction} />
-            <Search className="ico-btn" onClick={searchBtnAction} />
+            <ShoppingCart className="ico-btn" onClick={goToCart} />
+            <User className="ico-btn" onClick={goToProfile} />
+            <Search className="ico-btn" onClick={search} />
           </div>
         </div>
       </nav>
