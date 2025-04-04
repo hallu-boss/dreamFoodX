@@ -1,6 +1,5 @@
 import { useState, useEffect  } from "react";
-import UserData from "../types/UserData"; // Upewnij się, że ścieżka do pliku jest poprawna
-
+import UserData from "../types/UserData";
 
 
 export default function useUserData() {
