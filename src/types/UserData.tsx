@@ -30,10 +30,7 @@ export class UserData  {
     return this.isLoggedIn;
   }
 
-   login(email: string) : void {
-    this.email = email
-    this.isLoggedIn = true;
-  }
+  
 
   setDataUser(name: string, surname: string, cookingHours: number) {
     this.name = name;

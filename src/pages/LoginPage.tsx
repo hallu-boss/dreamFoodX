@@ -1,8 +1,9 @@
 // src//LoginPage.tsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { signIn, signUp } from "../services/auth";
 import {actionButton} from '../components/renderable_elements'
 import { useNavigate } from 'react-router-dom';
+
 
 const LoginPage = (
     { preliminaryLogin }: { preliminaryLogin: (email: string) => void }
@@ -13,13 +14,16 @@ const LoginPage = (
   const [error, setError] = useState("");
   const navigate = useNavigate(); // wykorzystywane do przenoszenia się na stronę główną przy logowaniu / wylogowaniu
 
-  
+  useEffect(() => {
+    if (userData.) {
+      navigate('/');
+    }
+  }, [userData, navigate]);
 
   const handleSignUp = async () => {
     try {
       await signUp(email, password);
       alert("Zarejestrowano!");
-      navigate('/')
     } catch (err) {
       setError("Błąd rejestracji: " + err);
     }
@@ -31,7 +35,6 @@ const LoginPage = (
       preliminaryLogin(email);
       alert("Zalogowano!");
       navigate('/')
-      
     } catch (err) {
       setError("Błąd logowania: " + err);
     }
