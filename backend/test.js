@@ -1,16 +1,14 @@
 const { PrismaClient } = require("@prisma/client");
-const { registerUser } = require("./controllers/registerController");
+const { loginUser } = require("./controllers/loginController");
 const prisma = new PrismaClient();
 
 async function main() {
   const data = {
-    name: "John",
-    surname: "Doe",
     email: "john.doe@example.com",
     password: "password123",
   };
-  const user = await registerUser(data);
-  console.log("User created:", user);
+  const token = await loginUser(data);
+  console.log("token:", token);
 }
 
 main()
