@@ -1,3 +1,4 @@
+import Register from "../components/ExampleRegister";
 
 function Home () {
 
@@ -6,6 +7,7 @@ function Home () {
             <div className="page-color">
                 home
             </div>
+            <Register />
         </>
     )
 }
