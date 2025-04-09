@@ -1,7 +1,7 @@
 import UserData from "../types/UserData";
 import {logOut } from "../services/auth";
 import { useState } from "react";
-import {actionButton} from '../components/renderable_elements'
+import {actionButton, redirectAndReload} from '../components/renderable_elements'
 import { useNavigate } from 'react-router-dom';
 import userImg from "../assets/user.png";
 
@@ -18,7 +18,7 @@ const ProfilePage = ({userData, logoutUser} :
         try {
           await logOut();
           logoutUser();
-          navigate('/')
+          redirectAndReload(navigate);
         } catch (err) {
           setError("Błąd logowania: " + err);
         }

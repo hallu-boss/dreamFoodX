@@ -1,6 +1,6 @@
 // src//LoginPage.tsx
 import { useState } from "react";
-import {actionButton} from '../components/renderable_elements'
+import {actionButton, redirectAndReload} from '../components/renderable_elements'
 import { useNavigate } from 'react-router-dom';
 
 
@@ -43,7 +43,8 @@ const RegisterPage = () => {
             const user = await response.json();
             alert("Rejestracja przebiegła pomyślnie!");
             
-            navigate('/')
+            redirectAndReload(navigate);
+
 
             return user;
           } 
@@ -55,7 +56,7 @@ const RegisterPage = () => {
   };
 
     const backToLoginPage = () => {
-        navigate('/login')
+        redirectAndReload(navigate);
     };
 
 

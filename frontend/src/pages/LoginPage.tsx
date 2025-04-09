@@ -1,6 +1,6 @@
 // src//LoginPage.tsx
 import { useState } from "react";
-import {actionButton} from '../components/renderable_elements'
+import {actionButton, redirectAndReload} from '../components/renderable_elements'
 import { useNavigate } from 'react-router-dom';
 
 
@@ -43,16 +43,15 @@ const LoginPage = (
         const token = data.token;
         localStorage.setItem("token", token);
 
-        navigate("/");
+        redirectAndReload(navigate);
 
       } 
       catch (error: any) {
         setError("Błąd podczas rejestracji: " + error.message);
       }
-  preliminaryLogin(email);
-  alert("Zalogowano!");
-  navigate('/')
-    
+      preliminaryLogin(email);
+      alert("Zalogowano!");
+      redirectAndReload(navigate);
   };
 
   const handleSignUp = () => {
