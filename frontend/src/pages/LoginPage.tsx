@@ -1,6 +1,5 @@
 // src//LoginPage.tsx
 import { useState } from "react";
-import { signIn } from "../services/auth";
 import {actionButton} from '../components/renderable_elements'
 import { useNavigate } from 'react-router-dom';
 
@@ -15,14 +14,45 @@ const LoginPage = (
   const navigate = useNavigate(); // wykorzystywane do przenoszenia się na stronę główną przy logowaniu / wylogowaniu
 
   const handleSignIn = async () => {
-    try {
-      await signIn(email, password);
-      preliminaryLogin(email);
-      alert("Zalogowano!");
-      navigate('/')
-    } catch (err) {
-      setError("Błąd logowania: " + err);
+    if (!email || !password) {
+      setError("Wypełnij wszystkie pola!");
+      return;
     }
+    const userLoginInformation = {email, password};
+
+    try {
+        const response = await fetch("http://localhost:5000/login", {
+            method: "POST",
+            headers: {
+            "Content-Type": "application/json",
+            },
+            body: JSON.stringify(userLoginInformation),
+        });
+    
+
+        let data;
+        try {
+          data = await response.json();
+        } catch (parseError) {
+          data = null;
+        }
+
+        if (!response.ok) {
+          return setError(data?.error || "Błąd logowania");
+        }
+        const token = data.token;
+        localStorage.setItem("token", token);
+
+        navigate("/");
+
+      } 
+      catch (error: any) {
+        setError("Błąd podczas rejestracji: " + error.message);
+      }
+  preliminaryLogin(email);
+  alert("Zalogowano!");
+  navigate('/')
+    
   };
 
   const handleSignUp = () => {

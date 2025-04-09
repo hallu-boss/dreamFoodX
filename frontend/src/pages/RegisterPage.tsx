@@ -3,6 +3,7 @@ import { useState } from "react";
 import {actionButton} from '../components/renderable_elements'
 import { useNavigate } from 'react-router-dom';
 
+
 const RegisterPage = () => {
   
     const [name, setName] = useState("");
@@ -32,7 +33,7 @@ const RegisterPage = () => {
                 "Content-Type": "application/json",
                 },
                 body: JSON.stringify(userData),
-                });
+            });
         
             if (!response.ok) {
               const errorData = await response.json();
@@ -83,7 +84,6 @@ const RegisterPage = () => {
       
         {formFields()}
 
-        
         {actionButton("Zarejestruj się", handleSignUp )}
         {actionButton("Anuluj", backToLoginPage )}
 
