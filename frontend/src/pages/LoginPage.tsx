@@ -25,7 +25,9 @@ const LoginPage = (
     }
   };
 
-  
+  const handleSignUp = () => {
+    navigate("/registration")
+  }
 
   return (
     <div className="page-color">

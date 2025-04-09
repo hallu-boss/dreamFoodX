@@ -23,11 +23,11 @@ function App() {
         />
         <Route
           path="/login"
-          element = {<RegisterPage />}
-          // element={<LoginPage preliminaryLogin={preliminaryLogin} />} // TODO: tylko testy nowej strony rejestracji
+          element={<LoginPage preliminaryLogin={preliminaryLogin} />}
         />
         <Route path="/new-recipe" element={<NewRecipe />} />
         <Route path="/cart" element={<CartPage />} />
+        <Route path="/registration" element={<RegisterPage />} />
       </Routes>
     </Router>
   );
