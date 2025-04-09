@@ -1,6 +1,7 @@
 const express = require('express')
 const cors = require('cors');
 const { handleGetProfileReq } = require('./controllers/profileController');
+const { verifyToken } = require('./controllers/loginController');
 const app = express()
 
 app.use(cors({

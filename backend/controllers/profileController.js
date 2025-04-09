@@ -3,25 +3,27 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const bcrypt = require("bcryptjs");
 
-exports.getProfile = async (userData) => {
-  const { id } = userData;
-
-  const existingUser = await prisma.user.findUnique({
-    where: { id },
-  });
-
-  if (!user) {
-    throw new Error("Invalid email or password");
-  }
-
-  return user;
-};
-
 exports.handleGetProfileReq = async (req, res) => {
   try {
-    const user = await this.getProfile(req.body);
-    res.status(201).json(user);
+    const userId = req.user.userId;
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        name: true,
+        surname: true,
+        cookingHours: true,
+        email: true,
+        recipes: true
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json(user);
   } catch (error) {
-    return res.status(500).json({ error: error.message });
+    res.status(500).json({ error: "Server error: " + error.message });
   }
 };
