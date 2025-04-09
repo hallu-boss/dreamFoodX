@@ -6,6 +6,7 @@ import useUserData from "./hooks/useUserData";
 import LoginPage from "./pages/LoginPage";
 import ProfilePage from "./pages/ProfilePage";
 import CartPage from "./pages/CartPage";
+import RegisterPage from "./pages/RegisterPage";
 
 function App() {
   const { userData, preliminaryLogin, logOut } = useUserData();
@@ -22,7 +23,8 @@ function App() {
         />
         <Route
           path="/login"
-          element={<LoginPage preliminaryLogin={preliminaryLogin} />}
+          element = {<RegisterPage />}
+          // element={<LoginPage preliminaryLogin={preliminaryLogin} />} // TODO: tylko testy nowej strony rejestracji
         />
         <Route path="/new-recipe" element={<NewRecipe />} />
         <Route path="/cart" element={<CartPage />} />
