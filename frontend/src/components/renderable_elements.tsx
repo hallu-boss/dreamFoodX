@@ -1,5 +1,3 @@
-import React from "react";
-
 
 // Przycisk odwzorowujący zaloguj, wygloguj, zarejestruj z pełnym formatowaniem
 export const actionButton = (name:string, onClicFunction: () => void) => {
@@ -11,3 +9,15 @@ export const actionButton = (name:string, onClicFunction: () => void) => {
         </div>
     )
 }
+
+// przekazując navigate funkcja strzałkowa przejdzie domyślnie do strony głównej i odświerzy widok
+
+export const redirectAndReload = (
+    navigate: (path: string) => void,
+    path: string = "/"
+  ) => {
+    navigate(path);
+    setTimeout(() => {
+        window.location.reload();
+      }, 5); 
+  };

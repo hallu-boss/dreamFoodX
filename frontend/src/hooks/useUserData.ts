@@ -5,7 +5,6 @@ import UserData from "../types/UserData";
 export default function useUserData() {
     const [userData, setUserData] = useState<UserData>(new UserData());
     
-
     // Inicjalizowanie userData z localStorage przy starcie aplikacji
     useEffect(() => {
         // Odczyt danych użytkownika z localStorage
@@ -24,12 +23,10 @@ export default function useUserData() {
 
     const preliminaryLogin = (email: string) => {
         setUserData(prev => {
-            const updatedUser = new UserData("Test", "Tester", prev.email, 1234);
-            updatedUser.login(email); 
+            const updatedUser = new UserData(prev.name, "Tester", email, 1234, true);
+            
             // TODO: pobranie danych o użytkowniku z bazy danych
-
-
-
+            
             // Zapisz dane użytkownika do localStorage
             localStorage.setItem('userData', JSON.stringify(updatedUser));
              
