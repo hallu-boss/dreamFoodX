@@ -1,8 +1,8 @@
 // src//LoginPage.tsx
 import { useState } from "react";
-import { signIn, signUp } from "../services/auth";
-import {actionButton} from '../components/renderable_elements'
+import {actionButton, redirectAndReload} from '../components/renderable_elements'
 import { useNavigate } from 'react-router-dom';
+
 
 const LoginPage = (
     { preliminaryLogin }: { preliminaryLogin: (email: string) => void }
@@ -13,31 +13,50 @@ const LoginPage = (
   const [error, setError] = useState("");
   const navigate = useNavigate(); // wykorzystywane do przenoszenia się na stronę główną przy logowaniu / wylogowaniu
 
-  
-
-  const handleSignUp = async () => {
-    try {
-      await signUp(email, password);
-      alert("Zarejestrowano!");
-      navigate('/')
-    } catch (err) {
-      setError("Błąd rejestracji: " + err);
-    }
-  };
-
   const handleSignIn = async () => {
+    if (!email || !password) {
+      setError("Wypełnij wszystkie pola!");
+      return;
+    }
+    const userLoginInformation = {email, password};
+
     try {
-      await signIn(email, password);
+        const response = await fetch("http://localhost:5000/login", {
+            method: "POST",
+            headers: {
+            "Content-Type": "application/json",
+            },
+            body: JSON.stringify(userLoginInformation),
+        });
+    
+
+        let data;
+        try {
+          data = await response.json();
+        } catch (parseError) {
+          data = null;
+        }
+
+        if (!response.ok) {
+          return setError(data?.error || "Błąd logowania");
+        }
+        const token = data.token;
+        localStorage.setItem("token", token);
+
+        redirectAndReload(navigate);
+
+      } 
+      catch (error: any) {
+        setError("Błąd podczas rejestracji: " + error.message);
+      }
       preliminaryLogin(email);
       alert("Zalogowano!");
-      navigate('/')
-      
-    } catch (err) {
-      setError("Błąd logowania: " + err);
-    }
+      redirectAndReload(navigate);
   };
 
-  
+  const handleSignUp = () => {
+    navigate("/registration")
+  }
 
   return (
     <div className="page-color">

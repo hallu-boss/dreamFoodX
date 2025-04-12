@@ -2,6 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
+
 .btn {
   @apply px-2 py-1 rounded-md font-medium text-white bg-plant-400 hover:bg-plant-500 transition;
 }
@@ -18,7 +19,6 @@
 .text-plant-400 {
   --tw-text-opacity: 1;
   color: rgb(bg-plant-400);
-  
 }
 
 .btn-size{
@@ -28,11 +28,25 @@
 .header-text {
   @apply text-plant-400 my-[3%] text-center text-4xl font-sans font-bold;
   font-family: Arial, sans-serif;
-  
+}
+
+.green-normal-text {
+  @apply text-plant-400 my-[1%] text-2xl font-sans font-bold;
+  font-family: Arial, sans-serif;
 }
 
 .page-color {
   background-color: #faf1e6;
   min-height: 100vh;
   padding: 40px;
+  /* @apply bg-[#faf1e6] w-[100%] px-4 py-2 mx-auto */
 }
+
+
+.context-box{
+  @apply bg-[#fdfaf6] w-[92%] px-4 py-2 mx-auto 
+}
+
+/* .text-profile{
+  @apply text-
+} */
