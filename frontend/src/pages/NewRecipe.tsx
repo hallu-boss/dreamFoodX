@@ -21,7 +21,7 @@ import KrokiForm from "../components/NewRecipe/Forms/KrokiForm";
 
 const NewRecipe: React.FC = () => {
   // Stan aktualnego kroku formularza
-  const [currentStep, setCurrentStep] = useState<RecipeFormStep>("skladniki"); // Ustawione na "składniki" do testowania
+  const [currentStep, setCurrentStep] = useState<RecipeFormStep>("informacje");
 
   // Stan danych formularza
   const [formData, setFormData] = useState<RecipeFormData>({
