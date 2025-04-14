@@ -1,7 +1,8 @@
 // InformacjeForm.tsx - Komponent formularza informacji
 import React from "react";
 import { RecipeFormData } from "../../../types/newRecipe";
-import { UploadIcon, ArrowRightIcon } from "../../../Icons";
+import { UploadIcon } from "../../../Icons";
+import { ArrowRight } from "lucide-react";
 
 interface InformacjeFormProps {
   formData: RecipeFormData;
@@ -96,7 +97,7 @@ const InformacjeForm: React.FC<InformacjeFormProps> = ({
       <div className="flex justify-end mt-8">
         <button onClick={handleNextStep} className="btn flex items-center">
           Dalej
-          <ArrowRightIcon />
+          <ArrowRight className="h-4 w-4 ml-2" />
         </button>
       </div>
     </div>

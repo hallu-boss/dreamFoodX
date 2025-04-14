@@ -1,4 +1,3 @@
-// SkladnikiForm.tsx - Komponent formularza składników
 import React from "react";
 import {
   DndContext,
@@ -71,9 +70,8 @@ const SkladnikiForm: React.FC<SkladnikiFormProps> = ({
           <button
             onClick={addIngredient}
             className="p-2 text-plant-600 hover:text-plant-800 focus:outline-none"
-            aria-label="Dodaj składnik" // Dodano dla dostępności
+            aria-label="Dodaj składnik"
           >
-            {/* Użyj ikony Plus z lucide-react */}
             <Plus className="h-6 w-6" />
           </button>
         </div>
@@ -82,15 +80,13 @@ const SkladnikiForm: React.FC<SkladnikiFormProps> = ({
       <div className="flex justify-between mt-8">
         <button
           onClick={handlePrevStep}
-          className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-100 flex items-center"
+          className="px-2 py-1 border border-gray-300 rounded hover:bg-gray-100 flex items-center"
         >
-          {/* Użyj ikony ArrowLeft z lucide-react */}
           <ArrowLeft className="h-4 w-4 mr-2" />
           Wstecz
         </button>
         <button onClick={handleNextStep} className="btn flex items-center">
           Dalej
-          {/* Użyj ikony ArrowRight z lucide-react */}
           <ArrowRight className="h-4 w-4 ml-2" />
         </button>
       </div>
