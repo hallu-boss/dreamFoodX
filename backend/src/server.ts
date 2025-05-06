@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from './routes/auth.routes';
 import healthRoute from './routes/health.routes';
+import ingredientsRoute from './routes/ingredients.routes'
 import { errorHandler } from './middleware/errorHandler';
 
 dotenv.config();
@@ -16,6 +17,7 @@ app.use(express.json());
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/ingredients', ingredientsRoute);
 app.use('/api', healthRoute);
 
 app.get('/', (req, res) => {
