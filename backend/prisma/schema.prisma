@@ -75,7 +75,6 @@ model MixStep {
 model Ingredient {
   id       Int     @id @default(autoincrement())
   title    String
-  amount   Float
   unit     String
   category String
 
