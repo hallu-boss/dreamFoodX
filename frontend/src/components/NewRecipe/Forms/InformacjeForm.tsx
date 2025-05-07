@@ -1,5 +1,5 @@
 // InformacjeForm.tsx - Komponent formularza informacji
-import React from "react";
+import React, { useState } from "react";
 import { RecipeFormData } from "../../../types/newRecipe";
 import { UploadIcon } from "../../../Icons";
 import { ArrowRight } from "lucide-react";
@@ -17,6 +17,26 @@ const InformacjeForm: React.FC<InformacjeFormProps> = ({
   handleInputChange,
   handleNextStep,
 }) => {
+  const [selectedImage, setSelectedImage] = useState<File | null>(formData.obraz || null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(
+    formData.obraz ? URL.createObjectURL(formData.obraz) : null
+  );
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedImage(file);
+      console.log(selectedImage)
+      setPreviewUrl(URL.createObjectURL(file));
+      // Bezpośrednio przypisujemy obraz do formData
+      formData.obraz = file;
+    }
+  };
+
+  const handleImageClick = () => {
+    document.getElementById("obraz")?.click();
+  };
+
   return (
     <div className="space-y-6 text-gray-600">
       <h2 className="text-2xl font-bold mb-6">Informacje</h2>
@@ -77,21 +97,33 @@ const InformacjeForm: React.FC<InformacjeFormProps> = ({
         <label htmlFor="obraz" className="block font-medium">
           Obraz
         </label>
-        <div className="flex items-center justify-center w-full border-2 border-dashed border-gray-300 rounded-lg p-4 bg-gray-50">
-          <div className="text-center">
-            <UploadIcon />
-            <p className="mt-1 text-sm text-gray-500">
-              Kliknij, aby wybrać lub przeciągnij obraz
-            </p>
-          </div>
-          <input
-            type="file"
-            id="obraz"
-            name="obraz"
-            accept="image/*"
-            className="hidden"
-          />
+        <div
+          className="flex items-center justify-center w-full border-2 border-dashed border-gray-300 rounded-lg p-4 bg-gray-50 cursor-pointer"
+          onClick={handleImageClick}
+        >
+          {previewUrl ? (
+            <img
+              src={previewUrl}
+              alt="Podgląd"
+              className="max-h-48 rounded object-contain"
+            />
+          ) : (
+            <div className="text-center">
+              <UploadIcon />
+              <p className="mt-1 text-sm text-gray-500">
+                Kliknij, aby wybrać lub przeciągnij obraz
+              </p>
+            </div>
+          )}
         </div>
+        <input
+          type="file"
+          id="obraz"
+          name="obraz"
+          accept="image/*"
+          className="hidden"
+          onChange={handleImageChange}
+        />
       </div>
 
       <div className="flex justify-end mt-8">

@@ -1,5 +1,5 @@
 // NewRecipe.tsx - Główny komponent przepisu
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   KeyboardSensor,
   PointerSensor,
@@ -12,8 +12,7 @@ import {
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
 
-import { RecipeFormStep, IngredientItem, RecipeFormData } from "../types/newRecipe";
-import { availableIngredients } from "../data/newRecipe";
+import { RecipeFormStep, IngredientItem, RecipeFormData, StepData } from "../types/newRecipe";
 import NewRecipeLegend from "../components/NewRecipe/NewRecipeLegend";
 import InformacjeForm from "../components/NewRecipe/Forms/InformacjeForm"
 import SkladnikiForm from "../components/NewRecipe/Forms/SkladnikiForm";
@@ -28,10 +27,17 @@ const NewRecipe: React.FC = () => {
     nazwa: "",
     opis: "",
     kategoria: "",
-    obraz: "",
-    skladniki: [],
     kroki: [],
   });
+
+  const [allIngredients, setAllIngredients] = useState<IngredientItem[]>([]);
+
+  useEffect(() => {
+    fetch("http://localhost:5000/api/ingredients/all")
+      .then((res) => res.json())
+      .then((data) => setAllIngredients(data))
+      .catch((err) => console.error("Błąd ładowania składników:", err));
+  }, [])
 
   // Konfiguracja sensorów dla dnd-kit
   const sensors = useSensors(
@@ -52,85 +58,95 @@ const NewRecipe: React.FC = () => {
   };
 
   // Funkcje do obsługi kroków
-  const addStep = (step: { 
-    opis: string; 
-    skladnik?: string; 
-    czas: string; 
-    temperatura: number; 
-    predkoscOstrzy: number 
-  }) => {
+  const addStep = (step: StepData) => {
     setFormData({
       ...formData,
       kroki: [...formData.kroki, step]
     });
   };
 
+  const updateStepsList = (newSteps: StepData[]) => {
+    setFormData({
+      ...formData,
+      kroki: newSteps
+    });
+  };
+
   // Funkcje do obsługi składników
-  const addIngredient = () => {
-    const newIngredient: IngredientItem = {
-      id: `ingredient-${Date.now()}`,
-      nazwa: "",
-      ilosc: "",
-      jednostka: "",
-    };
-    setFormData({
-      ...formData,
-      skladniki: [...formData.skladniki, newIngredient],
-    });
-  };
+  // const addIngredient = () => {
+  //   const newIngredient: IngredientItem = {
+  //     id: `ingredient-${Date.now()}`,
+  //     title: "",
+  //     unit: "",
+  //     category: "",
+  //   };
+  //   setFormData({
+  //     ...formData,
+  //     skladniki: [...formData.skladniki, newIngredient],
+  //   });
+  // };
 
-  const removeIngredient = (id: string) => {
-    setFormData({
-      ...formData,
-      skladniki: formData.skladniki.filter((item) => item.id !== id),
-    });
-  };
+  // const removeIngredient = (id: string) => {
+  //   setFormData({
+  //     ...formData,
+  //     skladniki: formData.skladniki.filter((item) => item.id !== id),
+  //   });
+  // };
 
-  const handleIngredientChange = (
-    id: string,
-    field: keyof IngredientItem,
-    value: string
-  ) => {
-    const updatedIngredients = formData.skladniki.map((ingredient) => {
-      if (ingredient.id === id) {
-        // Jeśli zmieniamy nazwę składnika, zaktualizuj też domyślną jednostkę
-        if (field === "nazwa" && value) {
-          const selectedIngredient = availableIngredients.find(
-            (item) => item.id === value
-          );
-          return {
-            ...ingredient,
-            [field]: value,
-            jednostka: selectedIngredient?.defaultJednostka || ingredient.jednostka,
-          };
-        }
-        return { ...ingredient, [field]: value };
-      }
-      return ingredient;
-    });
-
-    setFormData({
-      ...formData,
-      skladniki: updatedIngredients,
-    });
-  };
+  // const handleIngredientChange = (
+  //   id: string,
+  //   field: keyof IngredientItem,
+  //   value: string
+  // ) => {
+  //   const updatedIngredients = formData.skladniki.map((ingredient) => {
+  //     if (ingredient.id === id) {
+  //       // Jeśli zmieniamy nazwę składnika, zaktualizuj też domyślną jednostkę
+  //       if (field === "title" && value) {
+  //         const selectedIngredient = availableIngredients.find(
+  //           (item) => item.id === value
+  //         );
+  //         return {
+  //           ...ingredient,
+  //           [field]: value,
+  //           unit: selectedIngredient?.defaultJednostka || ingredient.unit,
+  //         };
+  //       }
+  //       return { ...ingredient, [field]: value };
+  //     }
+  //     return ingredient;
+  //   });
+  //
+  //   setFormData({
+  //     ...formData,
+  //     skladniki: updatedIngredients,
+  //   });
+  // };
 
   // Obsługa zakończenia przeciągania dla @dnd-kit
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    
-    if (over && active.id !== over.id) {
-      setFormData((prevData) => {
-        const oldIndex = prevData.skladniki.findIndex(item => item.id === active.id);
-        const newIndex = prevData.skladniki.findIndex(item => item.id === over.id);
-        
-        return {
-          ...prevData,
-          skladniki: arrayMove(prevData.skladniki, oldIndex, newIndex),
-        };
-      });
-    }
-  };
+  // const handleDragEnd = (event: DragEndEvent) => {
+  //   const { active, over } = event;
+  //
+  //   if (over && active.id !== over.id) {
+  //     setFormData((prevData) => {
+  //       const oldIndex = prevData.skladniki.findIndex(item => item.id === active.id);
+  //       const newIndex = prevData.skladniki.findIndex(item => item.id === over.id);
+  //
+  //       return {
+  //         ...prevData,
+  //         skladniki: arrayMove(prevData.skladniki, oldIndex, newIndex),
+  //       };
+  //     });
+  //   }
+  // };
+  //
+
+  // const handleDragEnd = (event: DragEndEvent) => {
+  //   const {active, over} = event;
+  //
+  //   if (over && active.id !== over.id) {
+  //
+  //   }
+  // }
 
   // Przejście do następnego kroku
   const handleNextStep = () => {
@@ -160,19 +176,21 @@ const NewRecipe: React.FC = () => {
           <SkladnikiForm
             formData={formData}
             sensors={sensors}
-            handleIngredientChange={handleIngredientChange}
-            handleDragEnd={handleDragEnd}
-            addIngredient={addIngredient}
-            removeIngredient={removeIngredient}
+            handleIngredientChange={() => { return }}
+            handleDragEnd={() => { return }}
+            removeIngredient={() => { return }}
+            addIngredient={() => { return }}
             handlePrevStep={handlePrevStep}
             handleNextStep={handleNextStep}
           />
         );
       case "kroki":
-        return <KrokiForm 
-          handlePrevStep={handlePrevStep} 
-          formData={formData} 
+        return <KrokiForm
+          handlePrevStep={handlePrevStep}
+          stepsList={formData.kroki}
+          ingredientsList={allIngredients}
           addStep={addStep}
+          updateStepsList={updateStepsList}
         />;
       default:
         return null;
@@ -185,7 +203,7 @@ const NewRecipe: React.FC = () => {
         <div className="flex flex-col md:flex-row gap-8">
           {/* Lewa kolumna - legenda kroków */}
           <div className="md:w-1/4">
-            <NewRecipeLegend 
+            <NewRecipeLegend
               currentStep={currentStep}
               setCurrentStep={setCurrentStep}
             />

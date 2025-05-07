@@ -11,10 +11,10 @@ export type StepItem = {
 
 // Typ reprezentujący pojedynczy składnik
 export type IngredientItem = {
-  id: string;
-  nazwa: string;
-  ilosc: string;
-  jednostka: string;
+  id: number;
+  title: string;
+  unit: string;
+  category: string;
 };
 
 // Typ reprezentujący dostępny składnik z predefiniowanej listy
@@ -24,12 +24,22 @@ export type AvailableIngredient = {
   defaultJednostka: string;
 };
 
+export interface StepData {
+  nazwa: string;
+  stepType: string;
+  opis: string;
+  skladnik: number;
+  ilosc?: string;
+  czas: string;
+  temperatura: number;
+  predkoscOstrzy: number;
+}
+
 // Typ reprezentujący dane formularza przepisu
 export type RecipeFormData = {
   nazwa: string;
   opis: string;
   kategoria: string;
-  obraz: string;
-  skladniki: IngredientItem[];
-  kroki: { opis: string; obraz?: string }[];
+  obraz?: File;
+  kroki: StepData[];
 };
