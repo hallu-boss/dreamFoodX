@@ -10,11 +10,12 @@ import {
 } from "@dnd-kit/sortable";
 import { ArrowLeft, ArrowRight, Plus } from 'lucide-react';
 
-import { RecipeFormData, IngredientItem } from "../../../types/newRecipe";
+import { IngredientItem } from "../../../types/newRecipe";
 import SortableIngredientItem from "../SortableIngredientItem";
+import { NewRecipeInfo } from "../../../pages/NewRecipe";
 
 interface SkladnikiFormProps {
-  formData: RecipeFormData;
+  formData: NewRecipeInfo;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   sensors: any;
   handleIngredientChange: (

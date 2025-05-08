@@ -1,5 +1,7 @@
 // Types.ts - Definicje typów dla aplikacji
 
+import { RecipeStep } from "./recipe/recipe";
+
 // Typ reprezentujący krok formularza
 export type RecipeFormStep = "informacje" | "skladniki" | "kroki";
 
@@ -17,19 +19,12 @@ export type IngredientItem = {
   category: string;
 };
 
-// Typ reprezentujący dostępny składnik z predefiniowanej listy
-export type AvailableIngredient = {
-  id: string;
-  nazwa: string;
-  defaultJednostka: string;
-};
-
 export interface StepData {
   nazwa: string;
   stepType: string;
   opis: string;
   skladnik: number;
-  ilosc?: string;
+  ilosc?: number;
   czas: string;
   temperatura: number;
   predkoscOstrzy: number;
@@ -40,6 +35,7 @@ export type RecipeFormData = {
   nazwa: string;
   opis: string;
   kategoria: string;
+  cena: number;
   obraz?: File;
-  kroki: StepData[];
+  kroki: RecipeStep[];
 };

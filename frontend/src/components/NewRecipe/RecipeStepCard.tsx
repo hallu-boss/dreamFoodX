@@ -1,10 +1,10 @@
-import { StepData } from "../../types/newRecipe";
 import { CSS } from "@dnd-kit/utilities";
 import { useSortable } from "@dnd-kit/sortable";
 import { GripVertical } from "lucide-react";
+import { NewRecipeStep } from "../../pages/NewRecipe";
 
 interface RecipeStepCardProps {
-  step: StepData;
+  step: NewRecipeStep;
   getIngredientName: (id: number) => string
   id: string;
 }
@@ -36,24 +36,24 @@ function RecipeStepCard({ step, getIngredientName, id }: RecipeStepCardProps) {
       >
         <GripVertical size={20} />
       </div>
-      <div className="font-medium">{step.nazwa}</div>
+      <div className="font-medium">{step.title}</div>
       <div className="text-sm text-gray-600 mt-1 space-y-1">
-        {step.stepType === "add" && (
+        {step.stepType === 'ADD_INGREDIENT' && (
           <>
-            {step.skladnik && (
-              <div>Składnik: {getIngredientName(step.skladnik)}</div>
+            {step.ingredientId && (
+              <div>Składnik: {getIngredientName(step.ingredientId)}</div>
             )}
-            {step.ilosc && <div>Ilość: {step.ilosc}</div>}
+            {step.amount && <div>Ilość: {step.amount}</div>}
           </>
         )}
-        {step.stepType === "cook" && (
+        {step.stepType === 'COOKING' && (
           <>
-            <div>Czas: {step.czas}</div>
-            <div>Temperatura: {step.temperatura}°C</div>
-            <div>Prędkość ostrzy: {step.predkoscOstrzy}</div>
+            <div>Czas: {step.time}</div>
+            <div>Temperatura: {step.temperature}</div>
+            <div>Prędkość ostrzy: {step.mixSpeed}</div>
           </>
         )}
-        {step.stepType === "text" && <div>Opis: {step.opis}</div>}
+        {step.stepType === "DESCRIPTION" && <div>Opis: {step.description}</div>}
       </div>
     </div>
   )

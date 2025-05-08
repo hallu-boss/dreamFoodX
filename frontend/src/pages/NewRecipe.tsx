@@ -5,30 +5,54 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
-  DragEndEvent,
 } from "@dnd-kit/core";
 import {
-  arrayMove,
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
 
-import { RecipeFormStep, IngredientItem, RecipeFormData, StepData } from "../types/newRecipe";
+import { RecipeFormStep, IngredientItem } from "../types/newRecipe";
 import NewRecipeLegend from "../components/NewRecipe/NewRecipeLegend";
 import InformacjeForm from "../components/NewRecipe/Forms/InformacjeForm"
 import SkladnikiForm from "../components/NewRecipe/Forms/SkladnikiForm";
 import KrokiForm from "../components/NewRecipe/Forms/KrokiForm";
+
+export interface NewRecipeStep {
+  title: string;
+  stepType: 'ADD_INGREDIENT' | 'COOKING' | 'DESCRIPTION';
+
+  ingredientId?: number;
+  amount?: number;
+
+  time?: string;
+  temperature?: number;
+  mixSpeed?: number;
+
+  description?: string;
+}
+
+export interface NewRecipeInfo {
+  title: string;
+  description: string;
+  category: string;
+  price: number;
+  steps: NewRecipeStep[];
+}
 
 const NewRecipe: React.FC = () => {
   // Stan aktualnego kroku formularza
   const [currentStep, setCurrentStep] = useState<RecipeFormStep>("informacje");
 
   // Stan danych formularza
-  const [formData, setFormData] = useState<RecipeFormData>({
-    nazwa: "",
-    opis: "",
-    kategoria: "",
-    kroki: [],
+  const [formData, setFormData] = useState<NewRecipeInfo>({
+    title: "",
+    description: "",
+    category: "",
+    price: 0.0,
+    steps: [],
   });
+  
+  // Osobny stan dla obrazka
+  const [recipeImage, setRecipeImage] = useState<File | null>(null);
 
   const [allIngredients, setAllIngredients] = useState<IngredientItem[]>([]);
 
@@ -53,100 +77,76 @@ const NewRecipe: React.FC = () => {
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
     >
   ) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    const { name, value, type } = e.target as HTMLInputElement;
+    
+    // Handle file input separately
+    if (type === 'iamge') {
+      const fileInput = e.target as HTMLInputElement;
+      if (fileInput.files && fileInput.files[0]) {
+        setRecipeImage(fileInput.files[0]);
+      }
+      return;
+    }
+    
+    const numVal = name === "price" ? parseFloat(value) || 0 : value;
+    setFormData({ ...formData, [name]: numVal });
   };
+
+  async function handleFinish() {
+    try {
+      // Create FormData for multipart/form-data upload
+      const formDataToSend = new FormData();
+      
+      // Add recipe data as JSON
+      const recipeDataJSON = JSON.stringify({
+        title: formData.title,
+        description: formData.description,
+        category: formData.category,
+        price: formData.price,
+        steps: formData.steps
+      });
+      
+      formDataToSend.append('recipeData', recipeDataJSON);
+      
+      // Add image file if exists
+      if (recipeImage) {
+        formDataToSend.append('image', recipeImage);
+      }
+      
+      const response = await fetch('http://localhost:5000/api/recipe/create', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          // Don't set Content-Type here - FormData sets it automatically with boundary
+        },
+        body: formDataToSend
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create recipe');
+      }
+      
+      const result = await response.json();
+      console.log('Recipe created successfully:', result);
+    } catch (error) {
+      console.error('Error creating recipe:', error);
+    }
+  }
 
   // Funkcje do obsługi kroków
-  const addStep = (step: StepData) => {
+  const addStep = (step: NewRecipeStep) => {
     setFormData({
       ...formData,
-      kroki: [...formData.kroki, step]
+      steps: [...formData.steps, step]
     });
   };
 
-  const updateStepsList = (newSteps: StepData[]) => {
+  const updateStepsList = (newSteps: NewRecipeStep[]) => {
     setFormData({
       ...formData,
-      kroki: newSteps
+      steps: newSteps
     });
   };
-
-  // Funkcje do obsługi składników
-  // const addIngredient = () => {
-  //   const newIngredient: IngredientItem = {
-  //     id: `ingredient-${Date.now()}`,
-  //     title: "",
-  //     unit: "",
-  //     category: "",
-  //   };
-  //   setFormData({
-  //     ...formData,
-  //     skladniki: [...formData.skladniki, newIngredient],
-  //   });
-  // };
-
-  // const removeIngredient = (id: string) => {
-  //   setFormData({
-  //     ...formData,
-  //     skladniki: formData.skladniki.filter((item) => item.id !== id),
-  //   });
-  // };
-
-  // const handleIngredientChange = (
-  //   id: string,
-  //   field: keyof IngredientItem,
-  //   value: string
-  // ) => {
-  //   const updatedIngredients = formData.skladniki.map((ingredient) => {
-  //     if (ingredient.id === id) {
-  //       // Jeśli zmieniamy nazwę składnika, zaktualizuj też domyślną jednostkę
-  //       if (field === "title" && value) {
-  //         const selectedIngredient = availableIngredients.find(
-  //           (item) => item.id === value
-  //         );
-  //         return {
-  //           ...ingredient,
-  //           [field]: value,
-  //           unit: selectedIngredient?.defaultJednostka || ingredient.unit,
-  //         };
-  //       }
-  //       return { ...ingredient, [field]: value };
-  //     }
-  //     return ingredient;
-  //   });
-  //
-  //   setFormData({
-  //     ...formData,
-  //     skladniki: updatedIngredients,
-  //   });
-  // };
-
-  // Obsługa zakończenia przeciągania dla @dnd-kit
-  // const handleDragEnd = (event: DragEndEvent) => {
-  //   const { active, over } = event;
-  //
-  //   if (over && active.id !== over.id) {
-  //     setFormData((prevData) => {
-  //       const oldIndex = prevData.skladniki.findIndex(item => item.id === active.id);
-  //       const newIndex = prevData.skladniki.findIndex(item => item.id === over.id);
-  //
-  //       return {
-  //         ...prevData,
-  //         skladniki: arrayMove(prevData.skladniki, oldIndex, newIndex),
-  //       };
-  //     });
-  //   }
-  // };
-  //
-
-  // const handleDragEnd = (event: DragEndEvent) => {
-  //   const {active, over} = event;
-  //
-  //   if (over && active.id !== over.id) {
-  //
-  //   }
-  // }
 
   // Przejście do następnego kroku
   const handleNextStep = () => {
@@ -164,9 +164,11 @@ const NewRecipe: React.FC = () => {
   const renderCurrentStepForm = () => {
     switch (currentStep) {
       case "informacje":
-        return (
+        return ( 
           <InformacjeForm
             formData={formData}
+            recipeImage={recipeImage}
+            handleRecipeImageChange={(image) => setRecipeImage(image)}
             handleInputChange={handleInputChange}
             handleNextStep={handleNextStep}
           />
@@ -187,7 +189,8 @@ const NewRecipe: React.FC = () => {
       case "kroki":
         return <KrokiForm
           handlePrevStep={handlePrevStep}
-          stepsList={formData.kroki}
+          handleFinish={handleFinish}
+          stepsList={formData.steps}
           ingredientsList={allIngredients}
           addStep={addStep}
           updateStepsList={updateStepsList}

@@ -21,55 +21,33 @@ model User {
   password   String
   cookingHours Float
   recipes    Recipe[]
+  reviews    Review[]
 }
 
 model Recipe {
-  id           Int           @id @default(autoincrement())
-  hidden       Boolean
-  creatorId    Int
-  creator      User          @relation(fields: [creatorId], references: [id])
-  recipeSteps  RecipeStep[]
-  rating       Int
-  price        Float
-  image        String
-  categories   String[]
+  id           Int         @id @default(autoincrement())
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  visible      Boolean @default(true)
+  title        String
+  description         String
+  category    String
+  price         Decimal     @db.Decimal(10, 2)
+  image        String?
+  userId       Int
+  user         User        @relation(fields: [userId], references: [id])
+  steps        RecipeStep[]
   reviews      Review[]
 }
 
 model Review {
   id        Int    @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
   recipe    Recipe @relation(fields: [recipeId], references: [id])
   recipeId  Int
   rating    Int
   opinion   String
-}
-
-model RecipeStep {
-  id         Int        @id @default(autoincrement())
-  description String
-  recipe      Recipe    @relation(fields: [recipeId], references: [id])
-  recipeId    Int
-
-  // Polymorphic relation – only one of the below will be used per step
-  weightStep  WeightStep?
-  mixStep     MixStep?
-}
-
-model WeightStep {
-  id            Int         @id @default(autoincrement())
-  recipeStep    RecipeStep  @relation(fields: [recipeStepId], references: [id])
-  recipeStepId  Int         @unique
-  ingredient    Ingredient  @relation(fields: [ingredientId], references: [id])
-  ingredientId  Int
-}
-
-model MixStep {
-  id            Int         @id @default(autoincrement())
-  recipeStep    RecipeStep  @relation(fields: [recipeStepId], references: [id])
-  recipeStepId  Int         @unique
-  speed         Int
-  temperature   Int
-  duration      Int // seconds or minutes, depending on your frontend logic
 }
 
 model Ingredient {
@@ -78,5 +56,30 @@ model Ingredient {
   unit     String
   category String
 
-  weightSteps WeightStep[]
+  steps RecipeStep[]
 }
+
+enum StepType {
+  ADD_INGREDIENT
+  COOKING
+  DESCRIPTION
+}
+
+model RecipeStep {
+  id               Int       @id @default(autoincrement())
+  title            String
+  stepType         StepType
+  recipeId         Int
+  recipe           Recipe    @relation(fields: [recipeId], references: [id])
+  
+  ingredientId     Int?
+  ingredient       Ingredient? @relation(fields: [ingredientId], references: [id])
+  amount            Decimal?     @db.Decimal(10, 2)
+  
+  time             String?
+  temperature      Int?
+  mixSpeed   Int?
+  
+  description             String?
+}
+

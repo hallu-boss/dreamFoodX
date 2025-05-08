@@ -1,11 +1,13 @@
 // InformacjeForm.tsx - Komponent formularza informacji
 import React, { useState } from "react";
-import { RecipeFormData } from "../../../types/newRecipe";
 import { UploadIcon } from "../../../Icons";
 import { ArrowRight } from "lucide-react";
+import { NewRecipeInfo } from "../../../pages/NewRecipe";
 
 interface InformacjeFormProps {
-  formData: RecipeFormData;
+  formData: NewRecipeInfo;
+  recipeImage?: File | null;
+  handleRecipeImageChange: (image: File) => void;
   handleInputChange: (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => void;
@@ -14,27 +16,26 @@ interface InformacjeFormProps {
 
 const InformacjeForm: React.FC<InformacjeFormProps> = ({
   formData,
+  recipeImage,
+  handleRecipeImageChange,
   handleInputChange,
   handleNextStep,
 }) => {
-  const [selectedImage, setSelectedImage] = useState<File | null>(formData.obraz || null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(
-    formData.obraz ? URL.createObjectURL(formData.obraz) : null
+    recipeImage ? URL.createObjectURL(recipeImage) : null
   );
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setSelectedImage(file);
-      console.log(selectedImage)
-      setPreviewUrl(URL.createObjectURL(file));
-      // Bezpośrednio przypisujemy obraz do formData
-      formData.obraz = file;
+    const image = e.target.files?.[0];
+    if (image) {
+      handleRecipeImageChange(image);
+      console.log(image)
+      setPreviewUrl(URL.createObjectURL(image));
     }
   };
 
   const handleImageClick = () => {
-    document.getElementById("obraz")?.click();
+    document.getElementById("image")?.click();
   };
 
   return (
@@ -42,27 +43,27 @@ const InformacjeForm: React.FC<InformacjeFormProps> = ({
       <h2 className="text-2xl font-bold mb-6">Informacje</h2>
 
       <div className="space-y-2">
-        <label htmlFor="nazwa" className="block font-medium">
+        <label htmlFor="title" className="block font-medium">
           Nazwa
         </label>
         <input
           type="text"
-          id="nazwa"
-          name="nazwa"
-          value={formData.nazwa}
+          id="title"
+          name="title"
+          value={formData.title}
           onChange={handleInputChange}
           className="w-full p-2 border rounded bg-gray-50"
         />
       </div>
 
       <div className="space-y-2">
-        <label htmlFor="opis" className="block font-medium">
+        <label htmlFor="description" className="block font-medium">
           Opis
         </label>
         <textarea
-          id="opis"
-          name="opis"
-          value={formData.opis}
+          id="description"
+          name="description"
+          value={formData.description}
           onChange={handleInputChange}
           rows={5}
           className="w-full p-2 border rounded bg-gray-50"
@@ -70,14 +71,14 @@ const InformacjeForm: React.FC<InformacjeFormProps> = ({
       </div>
 
       <div className="space-y-2">
-        <label htmlFor="kategoria" className="block font-medium">
+        <label htmlFor="category" className="block font-medium">
           Kategoria
         </label>
         <div className="relative">
           <select
-            id="kategoria"
-            name="kategoria"
-            value={formData.kategoria}
+            id="category"
+            name="category"
+            value={formData.category}
             onChange={handleInputChange}
             className="w-full p-2 border rounded bg-gray-50 appearance-none pr-8"
           >
@@ -94,7 +95,23 @@ const InformacjeForm: React.FC<InformacjeFormProps> = ({
       </div>
 
       <div className="space-y-2">
-        <label htmlFor="obraz" className="block font-medium">
+        <label htmlFor="price" className="block font-medium">
+          Cena
+        </label>
+        <input
+          type="number"
+          id="price"
+          name="price"
+          value={formData.price}
+          pattern="\d*"
+          placeholder="123"
+          onChange={handleInputChange}
+          className="w-full p-2 border rounded bg-gray-50"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <label htmlFor="image" className="block font-medium">
           Obraz
         </label>
         <div
@@ -118,8 +135,8 @@ const InformacjeForm: React.FC<InformacjeFormProps> = ({
         </div>
         <input
           type="file"
-          id="obraz"
-          name="obraz"
+          id="image"
+          name="image"
           accept="image/*"
           className="hidden"
           onChange={handleImageChange}

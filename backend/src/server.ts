@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import authRoutes from './routes/auth.routes';
 import healthRoute from './routes/health.routes';
 import ingredientsRoute from './routes/ingredients.routes'
+import recipeRoute from './routes/recipe.routes'
 import { errorHandler } from './middleware/errorHandler';
 
 dotenv.config();
@@ -19,6 +20,7 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/ingredients', ingredientsRoute);
 app.use('/api', healthRoute);
+app.use('/api/recipe', recipeRoute);
 
 app.get('/', (req, res) => {
   res.send('API działa prawidłowo. Użyj /api/health aby sprawdzić status.');

@@ -1,7 +1,7 @@
 // KrokiForm.tsx - Komponent formularza kroków
 import React, { useState } from "react";
 import { ArrowLeftIcon, PlusIcon } from "../../../Icons";
-import { IngredientItem, StepData } from "../../../types/newRecipe";
+import { IngredientItem } from "../../../types/newRecipe";
 import { StepModal } from "../StepModal";
 import RecipeStepCard from "../RecipeStepCard";
 import {
@@ -19,17 +19,20 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy
 } from "@dnd-kit/sortable";
+import { NewRecipeStep } from "../../../pages/NewRecipe";
 
 interface KrokiFormProps {
   handlePrevStep: () => void;
-  stepsList: StepData[];
+  handleFinish: () => void;
+  stepsList: NewRecipeStep[];
   ingredientsList: IngredientItem[];
-  addStep: (step: StepData) => void;
-  updateStepsList: (newSteps: StepData[]) => void;
+  addStep: (step: NewRecipeStep) => void;
+  updateStepsList: (newSteps: NewRecipeStep[]) => void;
 }
 
 const KrokiForm: React.FC<KrokiFormProps> = ({
   handlePrevStep,
+  handleFinish,
   stepsList,
   ingredientsList,
   addStep,
@@ -45,7 +48,7 @@ const KrokiForm: React.FC<KrokiFormProps> = ({
     })
   );
 
-  const handleAddStep = (stepData: StepData) => {
+  const handleAddStep = (stepData: NewRecipeStep) => {
     addStep(stepData);
     setIsModalOpen(false);
   };
@@ -121,10 +124,13 @@ const KrokiForm: React.FC<KrokiFormProps> = ({
           <ArrowLeftIcon />
           Wstecz
         </button>
-        <button className="btn">Zapisz przepis</button>
+        <button
+          onClick={handleFinish}
+          className="btn">Zapisz przepis</button>
       </div>
 
       <StepModal
+        availIngredients={ingredientsList}
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSave={handleAddStep}
