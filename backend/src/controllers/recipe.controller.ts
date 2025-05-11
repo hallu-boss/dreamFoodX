@@ -27,13 +27,69 @@ interface NewRecipeInfo {
   // Brak pola image w interfejsie, będzie obsługiwane osobno
 }
 
+export const getRecipe = async (req: Request, res: Response, next: NextFunction) => {
+  const recipeId = parseInt(req.params.id)
+  if (isNaN(recipeId))
+    return res.status(400).json({ error: 'Invalid recipe ID' })
+
+  try {
+    const recipe = await prisma.recipe.findUniqueOrThrow({
+      where: { id: recipeId },
+      select: {
+        id: true,
+        createdAt: true,
+        user: {
+          select: {
+            name: true,
+            surname: true
+          }
+        },
+        title: true,
+        description: true,
+        category: true,
+        price: true,
+        image: true,
+        steps: {
+          select: {
+            id: true,
+            title: true,
+            stepType: true,
+            description: true,
+            ingredient: {
+              select: {
+                title: true,
+                unit: true,
+              }
+            },
+            amount: true,
+            time: true,
+            temperature: true,
+            mixSpeed: true,
+          }
+        },
+        reviews: true,
+      },
+    })
+
+    if (!recipe) {
+      return res.status(404).json({ error: 'Recipe not found' });
+    }
+
+    res.json(recipe);
+
+  } catch (error) {
+    console.error('[GET /recipe/:id]', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
 export const createRecipe = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = (req as any).user.id;
-    
+
     // Parsowanie danych przepisu z JSON
-    const recipeData: NewRecipeInfo = req.body.recipeData 
-      ? JSON.parse(req.body.recipeData) 
+    const recipeData: NewRecipeInfo = req.body.recipeData
+      ? JSON.parse(req.body.recipeData)
       : req.body;
 
     const { title, description, category, price, steps } = recipeData;
@@ -52,15 +108,15 @@ export const createRecipe = async (req: Request, res: Response, next: NextFuncti
     }
 
     let imageUrl = '';
-     
+
     // Obsługa pliku obrazu, jeśli istnieje
     if (req.file) {
       // Utwórz FormData do wysłania do Cloudinary
       const fileFormData = new FormData();
-      
+
       // Konwersja bufora pliku na Blob
       const fileBlob = new Blob([req.file.buffer], { type: req.file.mimetype });
-      
+
       fileFormData.append('file', fileBlob, req.file.originalname);
       fileFormData.append('upload_preset', 'dreamFoodX-images');
       fileFormData.append('api_key', process.env.CLOUDINARY_API_KEY || "123");
