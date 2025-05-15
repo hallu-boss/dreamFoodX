@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { ValidationError } from '../utils/errors';
+import { permission } from 'process';
 
 const prisma = new PrismaClient();
 
@@ -38,8 +39,9 @@ export const getRecipe = async (req: Request, res: Response, next: NextFunction)
       select: {
         id: true,
         createdAt: true,
-        user: {
+        author: {
           select: {
+            id: true,
             name: true,
             surname: true
           }
@@ -68,6 +70,11 @@ export const getRecipe = async (req: Request, res: Response, next: NextFunction)
           }
         },
         reviews: true,
+        purchasers: {
+          select: {
+            id: true
+          }
+        }
       },
     })
 
@@ -75,8 +82,33 @@ export const getRecipe = async (req: Request, res: Response, next: NextFunction)
       return res.status(404).json({ error: 'Recipe not found' });
     }
 
-    res.json(recipe);
+    const userId = (req as any).user.id;
 
+    const isAuthor = recipe.author.id === userId;
+    const hasPurchased = recipe.purchasers.some(p => p.id === userId);
+    const isFree = Number(recipe.price) === 0;
+
+    const baseRecipeData = {
+      id: recipe.id,
+      createdAt: recipe.createdAt,
+      author: recipe.author,
+      title: recipe.title,
+      category: recipe.category,
+      price: recipe.price,
+      image: recipe.image,
+    };
+
+    if (isAuthor || hasPurchased || isFree) {
+      return res.json({
+        ...recipe,
+        permission: true
+      });
+    }
+
+    return res.json({
+      ...baseRecipeData,
+      permission: false
+    });
   } catch (error) {
     console.error('[GET /recipe/:id]', error);
     res.status(500).json({ error: 'Internal server error' });

@@ -11,6 +11,6 @@ const upload = multer({ storage: storage });
 const uploadMiddleware = upload.single('image');
 
 router.post('/create', authenticate, uploadMiddleware, createRecipe);
-router.get('/:id', getRecipe)
+router.get('/:id', authenticate, getRecipe)
 
 export default router;
