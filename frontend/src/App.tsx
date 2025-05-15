@@ -7,6 +7,7 @@ import LoginPage from "./pages/LoginPage";
 import ProfilePage from "./pages/ProfilePage";
 import CartPage from "./pages/CartPage";
 import RegisterPage from "./pages/RegisterPage";
+import { RecipePage } from "./pages/RecipePage";
 
 function App() {
   const { userData, preliminaryLogin, logOut } = useUserData();
@@ -28,6 +29,7 @@ function App() {
         <Route path="/new-recipe" element={<NewRecipe />} />
         <Route path="/cart" element={<CartPage />} />
         <Route path="/registration" element={<RegisterPage />} />
+        <Route path="/recipe/:id" element={<RecipePage />} />
       </Routes>
     </Router>
   );
