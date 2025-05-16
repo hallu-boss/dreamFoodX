@@ -7,6 +7,13 @@
   @apply px-2 py-1 rounded-md font-medium text-white bg-plant-400 hover:bg-plant-500 transition;
 }
 
+/* .range-slider {
+  @apply h-2 bg-gray-300 rounded-full appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-plant-500 custom-range
+} */
+
+.custom-select {
+  @apply px-1 py-2 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-plant-500 focus:border-transparent appearance-none cursor-pointer;
+}
 
 .ico-btn {
   @apply w-6 h-6 text-gray-500 hover:text-gray-600 cursor-pointer;
@@ -47,6 +54,32 @@
   @apply bg-[#fdfaf6] w-[92%] px-4 py-2 mx-auto 
 }
 
-/* .text-profile{
-  @apply text-
-} */
+.range-slider {
+  @apply appearance-none w-full h-2 bg-gray-300 rounded-lg;
+  background-image: linear-gradient(to right, #4b5563 1px, transparent 1px);
+  background-size: 10% 100%;
+}
+
+.range-slider::-webkit-slider-thumb {
+  @apply appearance-none w-4 h-4 bg-plant-200 rounded-full shadow-md cursor-pointer;
+}
+
+.range-slider::-moz-range-thumb {
+  @apply w-4 h-4 bg-plant-500 rounded-full shadow-md cursor-pointer;
+}
+
+.range-slider::-ms-thumb {
+  @apply w-4 h-4 bg-plant-500 rounded-full shadow-md cursor-pointer;
+}
+
+/* Dla Firefoxa */
+.range-slider::-moz-range-track {
+  background: transparent;
+}
+
+/* IE/Edge */
+.range-slider::-ms-track {
+  background: transparent;
+  border-color: transparent;
+  color: transparent;
+}

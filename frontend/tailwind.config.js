@@ -8,7 +8,7 @@ export default {
     extend: {
       colors: {
         plant: {
-          50: "#c2d7b6",
+          50: "#e7efe2",
           100: "#b8d0aa",
           200: "#adc99d",
           300: "#a3c391",
