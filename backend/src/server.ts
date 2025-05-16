@@ -1,11 +1,13 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import * as swaggerUi from 'swagger-ui-express';
 import authRoutes from './routes/auth.routes';
 import healthRoute from './routes/health.routes';
-import ingredientsRoute from './routes/ingredients.routes'
-import recipeRoute from './routes/recipe.routes'
+import ingredientsRoute from './routes/ingredients.routes';
+import recipeRoute from './routes/recipe.routes';
 import { errorHandler } from './middleware/errorHandler';
+import swaggerSpec from './swagger.config';
 
 dotenv.config();
 
@@ -16,6 +18,14 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
+// Swagger documentation
+app.use('/api-docs', swaggerUi.serve);
+app.use('/api-docs', swaggerUi.setup(swaggerSpec));
+app.get('/api-docs.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerSpec);
+});
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/ingredients', ingredientsRoute);
@@ -23,7 +33,7 @@ app.use('/api', healthRoute);
 app.use('/api/recipe', recipeRoute);
 
 app.get('/', (req, res) => {
-  res.send('API działa prawidłowo. Użyj /api/health aby sprawdzić status.');
+  res.send('API działa prawidłowo. Użyj /api/health aby sprawdzić status. Dokumentacja dostępna pod /api-docs');
 });
 
 // Error handling middleware
@@ -31,4 +41,5 @@ app.use(errorHandler);
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
+  console.log(`Swagger documentation available at http://localhost:${port}/api-docs`);
 });

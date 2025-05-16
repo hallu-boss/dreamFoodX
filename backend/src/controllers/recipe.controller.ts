@@ -1,10 +1,34 @@
 import { Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { ValidationError } from '../utils/errors';
-import { permission } from 'process';
 
 const prisma = new PrismaClient();
 
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     RecipeStep:
+ *       type: object
+ *       properties:
+ *         title:
+ *           type: string
+ *         stepType:
+ *           type: string
+ *           enum: [ADD_INGREDIENT, COOKING, DESCRIPTION]
+ *         ingredientId:
+ *           type: integer
+ *         amount:
+ *           type: number
+ *         time:
+ *           type: string
+ *         temperature:
+ *           type: number
+ *         mixSpeed:
+ *           type: number
+ *         description:
+ *           type: string
+ */
 interface NewRecipeStep {
   title: string;
   stepType: 'ADD_INGREDIENT' | 'COOKING' | 'DESCRIPTION';
@@ -19,6 +43,26 @@ interface NewRecipeStep {
   description?: string;
 }
 
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     NewRecipeInfo:
+ *       type: object
+ *       properties:
+ *         title:
+ *           type: string
+ *         description:
+ *           type: string
+ *         category:
+ *           type: string
+ *         price:
+ *           type: number
+ *         steps:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/RecipeStep'
+ */
 interface NewRecipeInfo {
   title: string;
   description: string;
@@ -28,6 +72,21 @@ interface NewRecipeInfo {
   // Brak pola image w interfejsie, będzie obsługiwane osobno
 }
 
+/**
+ * @swagger
+ * tags:
+ *   name: Recipes
+ *   description: API dla zarządzania przepisami
+ */
+
+/**
+ * @swagger
+ * /api/recipe/{id}:
+ *   get:
+ *     summary: Pobiera szczegóły przepisu po ID
+ *     description: Zwraca szczegóły przepisu. Jeśli użytkownik jest autorem, kupił przepis lub przepis jest darmowy, zwracane są pełne szczegóły.
+ *     tags: [Recipes]
+ */
 export const getRecipe = async (req: Request, res: Response, next: NextFunction) => {
   const recipeId = parseInt(req.params.id)
   if (isNaN(recipeId))
@@ -115,6 +174,14 @@ export const getRecipe = async (req: Request, res: Response, next: NextFunction)
   }
 }
 
+/**
+ * @swagger
+ * /api/recipe/create:
+ *   post:
+ *     summary: Tworzy nowy przepis
+ *     description: Tworzy nowy przepis z podanymi danymi i opcjonalnym obrazem
+ *     tags: [Recipes]
+ */
 export const createRecipe = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = (req as any).user.id;
