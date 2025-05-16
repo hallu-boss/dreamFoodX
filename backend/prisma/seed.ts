@@ -8,7 +8,7 @@ async function main() {
   await prisma.recipeStep.deleteMany({});
   await prisma.recipe.deleteMany({});
   await prisma.ingredient.deleteMany({});
-  
+
   console.log('Rozpoczęcie seedowania...');
 
   // Utwórz użytkownika
@@ -17,6 +17,13 @@ async function main() {
       name: "John",
       surname: "Doe",
       email: "john.doe@example.com",
+      password: "password123",
+      cookingHours: 0.0
+    },
+    {
+      name: "Abby",
+      surname: "Twinkle",
+      email: "abby.twinkle@example.com",
       password: "password123",
       cookingHours: 0.0
     },
@@ -144,6 +151,16 @@ async function main() {
       title: 'Drożdże',
       unit: 'g',
       category: 'Dodatki'
+    },
+    {
+      title: 'Woda',
+      unit: 'ml',
+      category: 'Woda'
+    },
+    {
+      title: 'Oliwa',
+      unit: 'ml',
+      category: 'Oliwa'
     }
   ];
 
@@ -371,18 +388,106 @@ async function main() {
           description: 'Pozostaw bułki do ostudzenia przez kilka minut przed podaniem'
         }
       ]
+    },
+    {
+      title: "Pizza Margherita",
+      description: "Klasyczna włoska pizza z sosem pomidorowym i mozzarellą.",
+      category: "Obiad",
+      price: 2.99,
+      image: "https://res.cloudinary.com/dco9zum8l/image/upload/v1747331152/pizza_c7dikp.jpg",
+      userId: 2,
+      steps: [
+        {
+          title: "Dodaj wodę",
+          stepType: "ADD_INGREDIENT",
+          ingredientId: findIngredientIdByTitle(createdIngredients, 'Woda'),
+          amount: 250
+        },
+        {
+          title: "Podgrzej wodę",
+          stepType: "COOKING",
+          time: "02:00",
+          temperature: 5,
+          mixSpeed: 1
+        },
+        {
+          title: "Dodaj drożdże i cukier",
+          stepType: "ADD_INGREDIENT",
+          ingredientId: findIngredientIdByTitle(createdIngredients, 'Drożdże'),
+          amount: 25
+        },
+        {
+          title: "Dodaj cukier",
+          stepType: "ADD_INGREDIENT",
+          ingredientId: findIngredientIdByTitle(createdIngredients, "Cukier"), // Cukier
+          amount: 5
+        },
+        {
+          title: "Wymieszaj składniki",
+          stepType: "COOKING",
+          time: "00:10",
+          temperature: 1,
+          mixSpeed: 3
+        },
+        {
+          title: "Dodaj mąkę",
+          stepType: "ADD_INGREDIENT",
+          ingredientId: findIngredientIdByTitle(createdIngredients, "Mąka pszenna"),
+          amount: 400
+        },
+        {
+          title: "Dodaj oliwę",
+          stepType: "ADD_INGREDIENT",
+          ingredientId: findIngredientIdByTitle(createdIngredients, 'Oliwa'),
+          amount: 20
+        },
+        {
+          title: "Dodaj sól",
+          stepType: "ADD_INGREDIENT",
+          ingredientId: findIngredientIdByTitle(createdIngredients, 'Sól'),
+          amount: 5
+        },
+        {
+          title: "Wyrób ciasto",
+          stepType: "COOKING",
+          time: "02:00",
+          temperature: 2,
+          mixSpeed: 5
+        },
+        {
+          title: "Opis wyrastania",
+          stepType: "DESCRIPTION",
+          description: "Pozostaw ciasto w misie Thermomixa do wyrośnięcia na 1 godzinę pod przykryciem."
+        },
+        {
+          title: "Opis przygotowania pizzy",
+          stepType: "DESCRIPTION",
+          description: "Rozwałkuj ciasto, uformuj placek i przełóż na blachę. Posmaruj sosem pomidorowym, dodaj mozzarellę i listki bazylii."
+        },
+        {
+          title: "Pieczenie",
+          stepType: "DESCRIPTION",
+          description: "Piecz w piekarniku nagrzanym do 220°C przez około 12-15 minut, aż ciasto będzie złociste, a ser się roztopi."
+        }
+      ]
     }
   ];
 
+  console.log(recipes[recipes.length - 1].steps)
+
   // Funkcja pomocnicza do znajdowania ID składnika po nazwie
   function findIngredientIdByTitle(ingredients: Ingredient[], title: string) {
-    return ingredients.findIndex((ing) => ing.title === title) + 1;
+    const found = ingredients.findIndex((ing) => ing.title === title) + 1;
+    if (found == -1) {
+      throw new Error(`Składnik ${title} nie istnieje`)
+    }
+    return found;
   }
 
   // Dodaj przepisy do bazy danych
   for (const recipe of recipes) {
     const { steps, ...recipeData } = recipe;
-    
+
     const createdRecipe = await prisma.recipe.create({
       data: {
         ...recipeData,
@@ -391,7 +496,7 @@ async function main() {
         }
       }
     });
-    
+
     console.log(`Dodano przepis: ${recipe.title} (ID: ${createdRecipe.id})`);
   }
 
