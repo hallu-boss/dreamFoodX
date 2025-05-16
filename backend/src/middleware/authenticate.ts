@@ -2,11 +2,28 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { AuthError } from '../utils/errors';
 
+/**
+ * @swagger
+ * components:
+ *   securitySchemes:
+ *     bearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
+ *       description: JWT token autoryzacyjny
+ */
+
 interface JwtPayload {
   id: number;
   email: string;
 }
 
+/**
+ * Middleware do uwierzytelniania użytkowników poprzez token JWT
+ * @param req - Obiekt żądania Express
+ * @param res - Obiekt odpowiedzi Express
+ * @param next - Funkcja przejścia do następnego middleware
+ */
 export const authenticate = (req: Request, res: Response, next: NextFunction) => {
   try {
     const authHeader = req.headers.authorization;
