@@ -149,6 +149,69 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/recipe/play/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Pobiera kroki przepisu do odtworzenia
+         * @description Zwraca szczegółowe kroki przepisu potrzebne do jego wykonania
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description ID przepisu */
+                    id: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Szczegóły kroków przepisu */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["GetApiRecipePlayIdResponse"];
+                    };
+                };
+                /** @description Nieprawidłowe ID przepisu */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Przepis nie został znaleziony */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Błąd serwera */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -210,6 +273,24 @@ export interface components {
             category?: string;
             price?: number;
             steps?: components["schemas"]["RecipeStep"][];
+        };
+        RecipePlayIdStep: {
+            id?: number;
+            title?: string;
+            /** @enum {string} */
+            stepType?: "ADD_INGREDIENT" | "COOKING" | "DESCRIPTION";
+            description?: string;
+            ingredient?: {
+                title?: string;
+                unit?: string;
+            };
+            amount?: number;
+            time?: string;
+            temperature?: number;
+            mixSpeed?: number;
+        };
+        GetApiRecipePlayIdResponse: {
+            steps?: components["schemas"]["RecipePlayIdStep"][];
         };
     };
     responses: never;
