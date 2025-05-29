@@ -113,7 +113,10 @@ export function RecipePage() {
       {/* Blur overlay when no permission */}
       <div className={`transition-all duration-300 ${!permission ? 'blur-sm pointer-events-none select-none' : ''}`}>
         <div className="w-[95%] mx-auto px-6 py-8 bg-white rounded-md text-gray-500">
-          <h2 className="text-6xl font-bold mb-6">{recipe.title}</h2>
+          <div className="flex flex-row mb-6 justify-start">
+            <h2 className="text-6xl font-bold">{recipe.title}</h2>
+            <button className="btn text-3xl mx-6 mt-2" onClick={() => navigate(`/recipe/play/${id}`)}>Gotuj</button>
+          </div>
           <div className="flex flex-row gap-2">
             <div className="flex items-center justify-center p-4 bg-gray-100 rounded-md w-3/5">
               {recipe.image && <img className="w-[650px] rounded-md" src={recipe.image} alt={recipe.title} />}

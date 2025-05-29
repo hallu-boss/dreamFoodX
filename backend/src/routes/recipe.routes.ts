@@ -1,8 +1,9 @@
 import express from 'express';
-import { createRecipe, getRecipe } from '../controllers/recipe.controller';
+import { createRecipe, getPlayRecipeSteps, getRecipe } from '../controllers/recipe.controller';
 import { authenticate } from '../middleware/authenticate';
 import { validateRecipe } from '../middleware/validators';
 import multer from 'multer';
+import { platform } from 'node:os';
 
 const router = express.Router();
 
@@ -162,7 +163,7 @@ router.post('/create', authenticate, uploadMiddleware, createRecipe);
  *         schema:
  *           type: integer
  *         description: ID przepisu
- *     responses:
+*     responses:
  *       200:
  *         description: Szczegóły przepisu
  *         content:
@@ -179,5 +180,35 @@ router.post('/create', authenticate, uploadMiddleware, createRecipe);
  *         description: Błąd serwera
  */
 router.get('/:id', authenticate, getRecipe);
+
+/**
+ * @swagger
+ * /api/recipe/play/{id}:
+ *   get:
+ *     summary: Pobiera kroki przepisu do odtworzenia
+ *     description: Zwraca szczegółowe kroki przepisu potrzebne do jego wykonania
+ *     tags: [Recipes]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: ID przepisu
+ *     responses:
+ *       200:
+ *         description: Szczegóły kroków przepisu
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/GetApiRecipePlayIdResponse'
+ *       400:
+ *         description: Nieprawidłowe ID przepisu
+ *       404:
+ *         description: Przepis nie został znaleziony
+ *       500:
+ *         description: Błąd serwera
+ */
+router.get('/play/:id', getPlayRecipeSteps);
 
 export default router;

@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, RecipeStep, StepType } from '@prisma/client';
 import { ValidationError } from '../utils/errors';
+import { Decimal } from '@prisma/client/runtime/library';
 
 const prisma = new PrismaClient();
 
@@ -261,3 +262,113 @@ export const createRecipe = async (req: Request, res: Response, next: NextFuncti
     next(error);
   }
 };
+
+export const hasAccesToRecipe = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const recipeId = parseInt(req.params.id)
+    const userId = (req as any).user.id;
+
+    const recipe = await prisma.recipe.findUniqueOrThrow({
+      where: { id: recipeId },
+      select: {
+        author: {
+          select: {
+            id: true,
+          }
+        },
+        price: true,
+        purchasers: {
+          select: {
+            id: true
+          }
+        }
+      }
+    })
+
+    const isAuthor = recipe.author.id === userId;
+    const hasPurchased = recipe.purchasers.some(p => p.id === userId);
+    const isFree = Number(recipe.price) === 0.0;
+
+    (req as any).hasPermission = isAuthor || hasPurchased || isFree;
+    next();
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     RecipePlayIdStep:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: integer
+ *         title:
+ *           type: string
+ *         stepType:
+ *           type: string
+ *           enum: [ADD_INGREDIENT, COOKING, DESCRIPTION]
+ *         description:
+ *           type: string
+ *         ingredient:
+ *           type: object
+ *           properties:
+ *             title:
+ *               type: string
+ *             unit:
+ *               type: string
+ *         amount:
+ *           type: number
+ *         time:
+ *           type: string
+ *         temperature:
+ *           type: number
+ *         mixSpeed:
+ *           type: number
+ *     GetApiRecipePlayIdResponse:
+ *       type: object
+ *       properties:
+ *         steps:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/RecipePlayIdStep'
+ */
+
+export const getPlayRecipeSteps = async (req: Request, res: Response, next: NextFunction) => {
+  const recipeId = parseInt(req.params.id)
+  if (isNaN(recipeId))
+    return res.status(400).json({ error: 'Invalid recipe ID' })
+
+  try {
+    const recipe = await prisma.recipe.findUniqueOrThrow({
+      where: { id: recipeId },
+      select: {
+        steps: {
+          select: {
+            id: true,
+            title: true,
+            stepType: true,
+            description: true,
+            ingredient: {
+              select: {
+                title: true,
+                unit: true,
+              }
+            },
+            amount: true,
+            time: true,
+            temperature: true,
+            mixSpeed: true
+          }
+        }
+      }
+    })
+
+    return res.json(recipe);
+  } catch (error) {
+    console.error('[GET /recipe/play/:id]', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}

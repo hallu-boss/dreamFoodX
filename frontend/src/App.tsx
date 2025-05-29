@@ -8,13 +8,17 @@ import ProfilePage from "./pages/ProfilePage";
 import CartPage from "./pages/CartPage";
 import RegisterPage from "./pages/RegisterPage";
 import { RecipePage } from "./pages/RecipePage";
+import { RecipePlayPage } from "./pages/RecipePlayPage";
+import logoImage from "./assets/logo-text-v2.svg";
+
+export const API_BASE_URL = "http://localhost:5000/api"
 
 function App() {
   const { userData, preliminaryLogin, logOut } = useUserData();
 
   return (
     <Router>
-      <NavBar logoPath="src/assets/logo-text-v2.svg" logoHref="/" />
+      <NavBar logoPath={logoImage} logoHref="/" />
 
       <Routes>
         <Route path="/" element={<Home />} />
@@ -30,6 +34,7 @@ function App() {
         <Route path="/cart" element={<CartPage />} />
         <Route path="/registration" element={<RegisterPage />} />
         <Route path="/recipe/:id" element={<RecipePage />} />
+        <Route path="/recipe/play/:id" element={<RecipePlayPage />} />
       </Routes>
     </Router>
   );
