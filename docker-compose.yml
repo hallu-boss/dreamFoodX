@@ -30,6 +30,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    volumes:
+      - ./backend/prisma:/app/prisma
 
   frontend:
     build:
