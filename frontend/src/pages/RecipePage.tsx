@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Ingredient, IngredientsList } from "../components/RecipePage/IngredientsList";
 import { RecipeStepCard } from "../components/RecipePage/RecipeStepCard";
+import { API_BASE_URL } from "../App";
 
 export interface RecipeStep {
   id: number;
@@ -88,7 +89,7 @@ export function RecipePage() {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    fetch(`http://localhost:5000/api/recipe/${id}`, {
+    fetch(`${API_BASE_URL}/recipe/${id}`, {
       headers: {
         Authorization: `Bearer ${token}`
       }

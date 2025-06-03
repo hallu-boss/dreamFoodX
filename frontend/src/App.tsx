@@ -11,7 +11,7 @@ import { RecipePage } from "./pages/RecipePage";
 import { RecipePlayPage } from "./pages/RecipePlayPage";
 import logoImage from "./assets/logo-text-v2.svg";
 
-export const API_BASE_URL = "http://localhost:5000/api"
+export const API_BASE_URL = "/api"
 
 function App() {
   const { userData, preliminaryLogin, logOut } = useUserData();

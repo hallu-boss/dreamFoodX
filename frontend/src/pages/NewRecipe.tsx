@@ -15,6 +15,7 @@ import NewRecipeLegend from "../components/NewRecipe/NewRecipeLegend";
 import InformacjeForm from "../components/NewRecipe/Forms/InformacjeForm"
 import SkladnikiForm from "../components/NewRecipe/Forms/SkladnikiForm";
 import KrokiForm from "../components/NewRecipe/Forms/KrokiForm";
+import { API_BASE_URL } from "../App";
 
 export interface NewRecipeStep {
   title: string;
@@ -57,7 +58,7 @@ const NewRecipe: React.FC = () => {
   const [allIngredients, setAllIngredients] = useState<IngredientItem[]>([]);
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/ingredients/all")
+    fetch(`${API_BASE_URL}/ingredients/all`)
       .then((res) => res.json())
       .then((data) => setAllIngredients(data))
       .catch((err) => console.error("Błąd ładowania składników:", err));
@@ -113,7 +114,7 @@ const NewRecipe: React.FC = () => {
         formDataToSend.append('image', recipeImage);
       }
       
-      const response = await fetch('http://localhost:5000/api/recipe/create', {
+      const response = await fetch(`${API_BASE_URL}/recipe/create`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
