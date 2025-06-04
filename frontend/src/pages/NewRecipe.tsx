@@ -1,18 +1,9 @@
 import React, { useEffect, useState } from "react";
-import {
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-} from "@dnd-kit/core";
-import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 
 import { RecipeFormStep, IngredientItem } from "../types/newRecipe";
 import NewRecipeLegend from "../components/NewRecipe/NewRecipeLegend";
 import InformacjeForm from "../components/NewRecipe/Forms/InformacjeForm";
-import SkladnikiForm, {
-  NewUserIngredient,
-} from "../components/NewRecipe/Forms/SkladnikiForm";
+import SkladnikiForm from "../components/NewRecipe/Forms/SkladnikiForm";
 import KrokiForm from "../components/NewRecipe/Forms/KrokiForm";
 import { API_BASE_URL } from "../App";
 
@@ -56,46 +47,51 @@ const NewRecipe: React.FC = () => {
 
   // Stany dla składników
   const [allIngredients, setAllIngredients] = useState<IngredientItem[]>([]);
-  const [userIngredients, setUserIngredients] = useState<IngredientItem[]>([]);
-  const [newIngredients, setNewIngredients] = useState<NewUserIngredient[]>([]);
   const [availCategories, setAvailCategories] = useState<string[]>([]);
 
   useEffect(() => {
-    // Pobierz wszystkie składniki (publiczne)
-    fetch(`${API_BASE_URL}/ingredients/all`)
-      .then((res) => res.json())
-      .then((data) => {
+    // Pobierz wszystkie składniki (publiczne) - potrzebne do kategorii
+    const fetchAllIngredients = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/ingredients/all`);
+        const data = await response.json();
+        
         setAllIngredients(data);
+        
         // Wyciągnij unikalne kategorie z wszystkich składników
         const categories: string[] = [
           ...new Set(data.map((ing: IngredientItem) => ing.category)),
         ] as string[];
 
         setAvailCategories(categories);
-      })
-      .catch((err) => console.error("Błąd ładowania składników:", err));
+      } catch (error) {
+        console.error("Błąd ładowania składników:", error);
+      }
+    };
 
-    // Pobierz składniki użytkownika
-    // TODO: Zastąpić rzeczywistym wywołaniem API
-    fetch(`${API_BASE_URL}/ingredients/user`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-    })
-      .then((res) => res.json())
-      .then((data) => setUserIngredients(data))
-      .catch((err) =>
-        console.error("Błąd ładowania składników użytkownika:", err)
-      );
+    fetchAllIngredients();
   }, []);
 
-  // Konfiguracja sensorów dla dnd-kit
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
+  // Funkcja do pobierania składników użytkownika
+  const fetchUserIngredients = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/ingredients/user`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Nie udało się pobrać składników użytkownika");
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Błąd ładowania składników użytkownika:", error);
+      throw error;
+    }
+  };
 
   // Obsługa zmiany wartości w formularzu
   const handleInputChange = (
@@ -175,9 +171,26 @@ const NewRecipe: React.FC = () => {
   };
 
   // Przejście do następnego kroku
-  const handleNextStep = () => {
-    if (currentStep === "informacje") setCurrentStep("skladniki");
-    else if (currentStep === "skladniki") setCurrentStep("kroki");
+  const handleNextStep = async () => {
+    if (currentStep === "informacje") {
+      setCurrentStep("skladniki");
+    } else if (currentStep === "skladniki") {
+      // Po zatwierdzeniu składników, pobierz ponownie dane użytkownika i przejdź do kroków
+      try {
+        const updatedUserIngredients = await fetchUserIngredients();
+        console.log("Zaktualizowane składniki użytkownika:", updatedUserIngredients);
+        
+        // Połącz wszystkie składniki (publiczne + użytkownika) dla KrokiForm
+        const combinedIngredients = [...allIngredients, ...updatedUserIngredients];
+        setAllIngredients(combinedIngredients);
+        
+        setCurrentStep("kroki");
+      } catch (error) {
+        console.error("Błąd podczas pobierania składników przed przejściem do kroków:", error);
+        // Mimo błędu, pozwól przejść dalej z istniejącymi danymi
+        setCurrentStep("kroki");
+      }
+    }
   };
 
   // Przejście do poprzedniego kroku
@@ -202,10 +215,7 @@ const NewRecipe: React.FC = () => {
       case "skladniki":
         return (
           <SkladnikiForm
-            formData={formData}
             availCategories={availCategories}
-            userIngredientsList={userIngredients}
-            newIngredients={newIngredients}
             handlePrevStep={handlePrevStep}
             handleNextStep={handleNextStep}
           />
@@ -216,7 +226,7 @@ const NewRecipe: React.FC = () => {
             handlePrevStep={handlePrevStep}
             handleFinish={handleFinish}
             stepsList={formData.steps}
-            ingredientsList={allIngredients}
+            ingredientsList={allIngredients} // Zawiera już połączone składniki publiczne + użytkownika
             addStep={addStep}
             updateStepsList={updateStepsList}
           />
