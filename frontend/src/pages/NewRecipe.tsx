@@ -1,25 +1,15 @@
-// NewRecipe.tsx - Główny komponent przepisu
 import React, { useEffect, useState } from "react";
-import {
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-} from "@dnd-kit/core";
-import {
-  sortableKeyboardCoordinates,
-} from "@dnd-kit/sortable";
 
 import { RecipeFormStep, IngredientItem } from "../types/newRecipe";
 import NewRecipeLegend from "../components/NewRecipe/NewRecipeLegend";
-import InformacjeForm from "../components/NewRecipe/Forms/InformacjeForm"
+import InformacjeForm from "../components/NewRecipe/Forms/InformacjeForm";
 import SkladnikiForm from "../components/NewRecipe/Forms/SkladnikiForm";
 import KrokiForm from "../components/NewRecipe/Forms/KrokiForm";
 import { API_BASE_URL } from "../App";
 
 export interface NewRecipeStep {
   title: string;
-  stepType: 'ADD_INGREDIENT' | 'COOKING' | 'DESCRIPTION';
+  stepType: "ADD_INGREDIENT" | "COOKING" | "DESCRIPTION";
 
   ingredientId?: number;
   amount?: number;
@@ -51,26 +41,57 @@ const NewRecipe: React.FC = () => {
     price: 0.0,
     steps: [],
   });
-  
+
   // Osobny stan dla obrazka
   const [recipeImage, setRecipeImage] = useState<File | null>(null);
 
+  // Stany dla składników
   const [allIngredients, setAllIngredients] = useState<IngredientItem[]>([]);
+  const [availCategories, setAvailCategories] = useState<string[]>([]);
 
   useEffect(() => {
-    fetch(`${API_BASE_URL}/ingredients/all`)
-      .then((res) => res.json())
-      .then((data) => setAllIngredients(data))
-      .catch((err) => console.error("Błąd ładowania składników:", err));
-  }, [])
+    // Pobierz wszystkie składniki (publiczne) - potrzebne do kategorii
+    const fetchAllIngredients = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/ingredients/all`);
+        const data = await response.json();
+        
+        setAllIngredients(data);
+        
+        // Wyciągnij unikalne kategorie z wszystkich składników
+        const categories: string[] = [
+          ...new Set(data.map((ing: IngredientItem) => ing.category)),
+        ] as string[];
 
-  // Konfiguracja sensorów dla dnd-kit
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
+        setAvailCategories(categories);
+      } catch (error) {
+        console.error("Błąd ładowania składników:", error);
+      }
+    };
+
+    fetchAllIngredients();
+  }, []);
+
+  // Funkcja do pobierania składników użytkownika
+  const fetchUserIngredients = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/ingredients/user`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Nie udało się pobrać składników użytkownika");
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Błąd ładowania składników użytkownika:", error);
+      throw error;
+    }
+  };
 
   // Obsługa zmiany wartości w formularzu
   const handleInputChange = (
@@ -79,16 +100,16 @@ const NewRecipe: React.FC = () => {
     >
   ) => {
     const { name, value, type } = e.target as HTMLInputElement;
-    
+
     // Handle file input separately
-    if (type === 'iamge') {
+    if (type === "image") {
       const fileInput = e.target as HTMLInputElement;
       if (fileInput.files && fileInput.files[0]) {
         setRecipeImage(fileInput.files[0]);
       }
       return;
     }
-    
+
     const numVal = name === "price" ? parseFloat(value) || 0 : value;
     setFormData({ ...formData, [name]: numVal });
   };
@@ -97,40 +118,40 @@ const NewRecipe: React.FC = () => {
     try {
       // Create FormData for multipart/form-data upload
       const formDataToSend = new FormData();
-      
+
       // Add recipe data as JSON
       const recipeDataJSON = JSON.stringify({
         title: formData.title,
         description: formData.description,
         category: formData.category,
         price: formData.price,
-        steps: formData.steps
+        steps: formData.steps,
       });
-      
-      formDataToSend.append('recipeData', recipeDataJSON);
-      
+
+      formDataToSend.append("recipeData", recipeDataJSON);
+
       // Add image file if exists
       if (recipeImage) {
-        formDataToSend.append('image', recipeImage);
+        formDataToSend.append("image", recipeImage);
       }
-      
+
       const response = await fetch(`${API_BASE_URL}/recipe/create`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
           // Don't set Content-Type here - FormData sets it automatically with boundary
         },
-        body: formDataToSend
+        body: formDataToSend,
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create recipe');
+        throw new Error("Failed to create recipe");
       }
-      
+
       const result = await response.json();
-      console.log('Recipe created successfully:', result);
+      console.log("Recipe created successfully:", result);
     } catch (error) {
-      console.error('Error creating recipe:', error);
+      console.error("Error creating recipe:", error);
     }
   }
 
@@ -138,21 +159,38 @@ const NewRecipe: React.FC = () => {
   const addStep = (step: NewRecipeStep) => {
     setFormData({
       ...formData,
-      steps: [...formData.steps, step]
+      steps: [...formData.steps, step],
     });
   };
 
   const updateStepsList = (newSteps: NewRecipeStep[]) => {
     setFormData({
       ...formData,
-      steps: newSteps
+      steps: newSteps,
     });
   };
 
   // Przejście do następnego kroku
-  const handleNextStep = () => {
-    if (currentStep === "informacje") setCurrentStep("skladniki");
-    else if (currentStep === "skladniki") setCurrentStep("kroki");
+  const handleNextStep = async () => {
+    if (currentStep === "informacje") {
+      setCurrentStep("skladniki");
+    } else if (currentStep === "skladniki") {
+      // Po zatwierdzeniu składników, pobierz ponownie dane użytkownika i przejdź do kroków
+      try {
+        const updatedUserIngredients = await fetchUserIngredients();
+        console.log("Zaktualizowane składniki użytkownika:", updatedUserIngredients);
+        
+        // Połącz wszystkie składniki (publiczne + użytkownika) dla KrokiForm
+        const combinedIngredients = [...allIngredients, ...updatedUserIngredients];
+        setAllIngredients(combinedIngredients);
+        
+        setCurrentStep("kroki");
+      } catch (error) {
+        console.error("Błąd podczas pobierania składników przed przejściem do kroków:", error);
+        // Mimo błędu, pozwól przejść dalej z istniejącymi danymi
+        setCurrentStep("kroki");
+      }
+    }
   };
 
   // Przejście do poprzedniego kroku
@@ -165,7 +203,7 @@ const NewRecipe: React.FC = () => {
   const renderCurrentStepForm = () => {
     switch (currentStep) {
       case "informacje":
-        return ( 
+        return (
           <InformacjeForm
             formData={formData}
             recipeImage={recipeImage}
@@ -177,25 +215,22 @@ const NewRecipe: React.FC = () => {
       case "skladniki":
         return (
           <SkladnikiForm
-            formData={formData}
-            sensors={sensors}
-            handleIngredientChange={() => { return }}
-            handleDragEnd={() => { return }}
-            removeIngredient={() => { return }}
-            addIngredient={() => { return }}
+            availCategories={availCategories}
             handlePrevStep={handlePrevStep}
             handleNextStep={handleNextStep}
           />
         );
       case "kroki":
-        return <KrokiForm
-          handlePrevStep={handlePrevStep}
-          handleFinish={handleFinish}
-          stepsList={formData.steps}
-          ingredientsList={allIngredients}
-          addStep={addStep}
-          updateStepsList={updateStepsList}
-        />;
+        return (
+          <KrokiForm
+            handlePrevStep={handlePrevStep}
+            handleFinish={handleFinish}
+            stepsList={formData.steps}
+            ingredientsList={allIngredients} // Zawiera już połączone składniki publiczne + użytkownika
+            addStep={addStep}
+            updateStepsList={updateStepsList}
+          />
+        );
       default:
         return null;
     }
