@@ -10,33 +10,36 @@ import RegisterPage from "./pages/RegisterPage";
 import { RecipePage } from "./pages/RecipePage";
 import { RecipePlayPage } from "./pages/RecipePlayPage";
 import logoImage from "./assets/logo-text-v2.svg";
+import { CartProvider } from "./contexts/CartContext";
 
-export const API_BASE_URL = "/api"
+export const API_BASE_URL = "/api";
 
 function App() {
   const { userData, preliminaryLogin, logOut } = useUserData();
 
   return (
-    <Router>
-      <NavBar logoPath={logoImage} logoHref="/" />
+    <CartProvider>
+      <Router>
+        <NavBar logoPath={logoImage} logoHref="/" />
 
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route
-          path="/profile"
-          element={<ProfilePage userData={userData} logoutUser={logOut} />}
-        />
-        <Route
-          path="/login"
-          element={<LoginPage preliminaryLogin={preliminaryLogin} />}
-        />
-        <Route path="/new-recipe" element={<NewRecipe />} />
-        <Route path="/cart" element={<CartPage />} />
-        <Route path="/registration" element={<RegisterPage />} />
-        <Route path="/recipe/:id" element={<RecipePage />} />
-        <Route path="/recipe/play/:id" element={<RecipePlayPage />} />
-      </Routes>
-    </Router>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route
+            path="/profile"
+            element={<ProfilePage userData={userData} logoutUser={logOut} />}
+          />
+          <Route
+            path="/login"
+            element={<LoginPage preliminaryLogin={preliminaryLogin} />}
+          />
+          <Route path="/new-recipe" element={<NewRecipe />} />
+          <Route path="/cart" element={<CartPage />} />
+          <Route path="/registration" element={<RegisterPage />} />
+          <Route path="/recipe/:id" element={<RecipePage />} />
+          <Route path="/recipe/play/:id" element={<RecipePlayPage />} />
+        </Routes>
+      </Router>
+    </CartProvider>
   );
 }
 
