@@ -9,10 +9,11 @@ import CartPage from './pages/CartPage';
 import RegisterPage from './pages/RegisterPage';
 import { RecipePage } from './pages/RecipePage';
 import { RecipePlayPage } from './pages/RecipePlayPage';
-import logoImage from './assets/logo-text-v2.svg';
-import { CartProvider } from './contexts/CartContext';
+import RecipesPage from './pages/SearchRecipesPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicy';
 import TermsOfServicePage from './pages/TermsOfServicePage';
+import logoImage from './assets/logo-text-v2.svg';
+import { CartProvider } from './contexts/CartContext';
 
 export const API_BASE_URL = '/api';
 
@@ -26,6 +27,7 @@ function App() {
 
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/recipes" element={<RecipesPage />} />
           <Route
             path="/profile"
             element={<ProfilePage userData={userData} logoutUser={logOut} />}
