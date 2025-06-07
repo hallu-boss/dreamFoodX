@@ -1,18 +1,20 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Home from "../src/pages/Home";
-import NavBar from "./components/NavBar/NavBar";
-import NewRecipe from "./pages/NewRecipe";
-import useUserData from "./hooks/useUserData";
-import LoginPage from "./pages/LoginPage";
-import ProfilePage from "./pages/ProfilePage";
-import CartPage from "./pages/CartPage";
-import RegisterPage from "./pages/RegisterPage";
-import { RecipePage } from "./pages/RecipePage";
-import { RecipePlayPage } from "./pages/RecipePlayPage";
-import logoImage from "./assets/logo-text-v2.svg";
-import { CartProvider } from "./contexts/CartContext";
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Home from '../src/pages/Home';
+import NavBar from './components/NavBar/NavBar';
+import NewRecipe from './pages/NewRecipe';
+import useUserData from './hooks/useUserData';
+import LoginPage from './pages/LoginPage';
+import ProfilePage from './pages/ProfilePage';
+import CartPage from './pages/CartPage';
+import RegisterPage from './pages/RegisterPage';
+import { RecipePage } from './pages/RecipePage';
+import { RecipePlayPage } from './pages/RecipePlayPage';
+import logoImage from './assets/logo-text-v2.svg';
+import { CartProvider } from './contexts/CartContext';
+import PrivacyPolicyPage from './pages/PrivacyPolicy';
+import TermsOfServicePage from './pages/TermsOfServicePage';
 
-export const API_BASE_URL = "/api";
+export const API_BASE_URL = '/api';
 
 function App() {
   const { userData, preliminaryLogin, logOut } = useUserData();
@@ -37,6 +39,8 @@ function App() {
           <Route path="/registration" element={<RegisterPage />} />
           <Route path="/recipe/:id" element={<RecipePage />} />
           <Route path="/recipe/play/:id" element={<RecipePlayPage />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+          <Route path="/terms-of-service" element={<TermsOfServicePage />} />
         </Routes>
       </Router>
     </CartProvider>
