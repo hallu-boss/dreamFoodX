@@ -1,4 +1,5 @@
 export interface MenuItem {
-    label: string;
-    href: string;
+  label: string;
+  href: string;
+  submenu?: MenuItem[];
 }
