@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import {
   X,
   CreditCard,
@@ -6,9 +6,9 @@ import {
   CheckCircle,
   AlertCircle,
   Loader2,
-} from "lucide-react";
-import { useCart } from "../../contexts/CartContext";
-
+} from 'lucide-react';
+import { useCart } from '../../contexts/CartContext';
+import { API_BASE_URL } from '../../App';
 
 interface CheckoutModalProps {
   isOpen: boolean;
@@ -28,6 +28,28 @@ interface FormErrors {
   [key: string]: string;
 }
 
+interface CheckoutResponse {
+  success: boolean;
+  order: {
+    id: number;
+    userId: number;
+    total: number;
+    status: string;
+    items: Array<{
+      id: number;
+      recipeId: number;
+      title: string;
+      price: number;
+      author: {
+        name: string;
+        surname: string;
+      };
+    }>;
+    createdAt: string;
+  };
+  message: string;
+}
+
 const CheckoutModal: React.FC<CheckoutModalProps> = ({
   isOpen,
   onClose,
@@ -36,58 +58,67 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const { items, total, clearCart } = useCart();
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
-  const [currentStep, setCurrentStep] = useState<'form' | 'processing' | 'success'>('form');
-  
+  const [currentStep, setCurrentStep] = useState<
+    'form' | 'processing' | 'success'
+  >('form');
+
   const [formData, setFormData] = useState<PaymentData>({
-    cardNumber: "",
-    expiryDate: "",
-    cvv: "",
+    cardNumber: '',
+    expiryDate: '',
+    cvv: '',
     acceptTerms: false,
     newsletter: false,
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
 
+  // Funkcja do pobierania tokenu
+  const getToken = () => {
+    return localStorage.getItem('token');
+  };
+
   // Walidacja formularza
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
 
     // Numer karty (podstawowa walidacja - 16 cyfr)
-    const cardNumber = formData.cardNumber.replace(/\s/g, "");
+    const cardNumber = formData.cardNumber.replace(/\s/g, '');
     if (!cardNumber) {
-      newErrors.cardNumber = "Numer karty jest wymagany";
+      newErrors.cardNumber = 'Numer karty jest wymagany';
     } else if (!/^\d{16}$/.test(cardNumber)) {
-      newErrors.cardNumber = "Numer karty musi mieć 16 cyfr";
+      newErrors.cardNumber = 'Numer karty musi mieć 16 cyfr';
     }
 
     // Data ważności (MM/YY)
     if (!formData.expiryDate) {
-      newErrors.expiryDate = "Data ważności jest wymagana";
+      newErrors.expiryDate = 'Data ważności jest wymagana';
     } else if (!/^\d{2}\/\d{2}$/.test(formData.expiryDate)) {
-      newErrors.expiryDate = "Format: MM/YY";
+      newErrors.expiryDate = 'Format: MM/YY';
     } else {
       // Sprawdź czy data nie jest przeszła
       const [month, year] = formData.expiryDate.split('/');
       const currentDate = new Date();
       const currentYear = currentDate.getFullYear() % 100;
       const currentMonth = currentDate.getMonth() + 1;
-      
-      if (parseInt(year) < currentYear || 
-          (parseInt(year) === currentYear && parseInt(month) < currentMonth)) {
-        newErrors.expiryDate = "Karta jest przeterminowana";
+
+      if (
+        parseInt(year) < currentYear ||
+        (parseInt(year) === currentYear && parseInt(month) < currentMonth)
+      ) {
+        newErrors.expiryDate = 'Karta jest przeterminowana';
       }
     }
 
     // CVV
     if (!formData.cvv) {
-      newErrors.cvv = "CVV jest wymagany";
+      newErrors.cvv = 'CVV jest wymagany';
     } else if (!/^\d{3,4}$/.test(formData.cvv)) {
-      newErrors.cvv = "CVV musi mieć 3-4 cyfry";
+      newErrors.cvv = 'CVV musi mieć 3-4 cyfry';
     }
 
     // Regulamin
     if (!formData.acceptTerms) {
-      newErrors.acceptTerms = "Musisz zaakceptować regulamin";
+      newErrors.acceptTerms = 'Musisz zaakceptować regulamin';
     }
 
     setErrors(newErrors);
@@ -96,56 +127,150 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
   // Formatowanie numeru karty (dodaje spacje co 4 cyfry)
   const formatCardNumber = (value: string) => {
-    const numbers = value.replace(/\D/g, "");
+    const numbers = value.replace(/\D/g, '');
     const groups = numbers.match(/.{1,4}/g);
-    return groups ? groups.join(" ") : numbers;
+    return groups ? groups.join(' ') : numbers;
   };
 
   // Formatowanie daty ważności (MM/YY)
   const formatExpiryDate = (value: string) => {
-    const numbers = value.replace(/\D/g, "");
+    const numbers = value.replace(/\D/g, '');
     if (numbers.length >= 2) {
-      return numbers.substring(0, 2) + "/" + numbers.substring(2, 4);
+      return numbers.substring(0, 2) + '/' + numbers.substring(2, 4);
     }
     return numbers;
   };
 
   // Obsługa zmian w formularzu
-  const handleInputChange = (field: keyof PaymentData, value: string | boolean) => {
+  const handleInputChange = (
+    field: keyof PaymentData,
+    value: string | boolean
+  ) => {
     let processedValue = value;
 
     // Specjalne formatowanie dla niektórych pól
-    if (field === "cardNumber" && typeof value === "string") {
+    if (field === 'cardNumber' && typeof value === 'string') {
       processedValue = formatCardNumber(value);
-    } else if (field === "expiryDate" && typeof value === "string") {
+    } else if (field === 'expiryDate' && typeof value === 'string') {
       processedValue = formatExpiryDate(value);
-    } else if (field === "cvv" && typeof value === "string") {
-      processedValue = value.replace(/\D/g, "").substring(0, 4);
+    } else if (field === 'cvv' && typeof value === 'string') {
+      processedValue = value.replace(/\D/g, '').substring(0, 4);
     }
 
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [field]: processedValue,
     }));
 
     // Usuń błąd dla tego pola
     if (errors[field]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [field]: "",
+        [field]: '',
       }));
     }
   };
 
-  // Symulacja procesu płatności
+  // Walidacja koszyka przed checkout
+  const validateCart = async (): Promise<boolean> => {
+    const token = getToken();
+    if (!token) {
+      setErrors({ general: 'Musisz być zalogowany aby dokonać zakupu.' });
+      return false;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/orders/validate-cart`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          setErrors({ general: 'Sesja wygasła. Zaloguj się ponownie.' });
+          return false;
+        }
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const validation = await response.json();
+
+      if (!validation.valid) {
+        const errorMessage =
+          validation.errors.length > 0
+            ? validation.errors.join(', ')
+            : 'Koszyk zawiera nieprawidłowe elementy.';
+        setErrors({ general: errorMessage });
+        return false;
+      }
+
+      // Pokaż ostrzeżenia jeśli są
+      if (validation.warnings.length > 0) {
+        console.warn('Cart warnings:', validation.warnings);
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error validating cart:', error);
+      setErrors({
+        general: 'Błąd podczas walidacji koszyka. Spróbuj ponownie.',
+      });
+      return false;
+    }
+  };
+
+  // Proces płatności przez backend
   const processPayment = async (): Promise<boolean> => {
-    return new Promise((resolve) => {
-      // Symulacja opóźnienia API
-      setTimeout(() => {
-        // 90% szans na sukces (dla demonstracji)
-        resolve(Math.random() > 0.1);
-      }, 3000);
-    });
+    const token = getToken();
+    if (!token) {
+      setErrors({ general: 'Musisz być zalogowany aby dokonać zakupu.' });
+      return false;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/orders/checkout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          paymentMethod: 'mock',
+          newsletter: formData.newsletter,
+        }),
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          setErrors({ general: 'Sesja wygasła. Zaloguj się ponownie.' });
+          return false;
+        }
+
+        // Spróbuj odczytać szczegóły błędu z odpowiedzi
+        const errorData = await response.json().catch(() => null);
+        const errorMessage =
+          errorData?.message || `Błąd płatności (${response.status})`;
+        setErrors({ general: errorMessage });
+        return false;
+      }
+
+      const result: CheckoutResponse = await response.json();
+
+      if (result.success) {
+        console.log('Order completed:', result.order);
+        return true;
+      } else {
+        setErrors({ general: result.message || 'Płatność nie powiodła się.' });
+        return false;
+      }
+    } catch (error) {
+      console.error('Error processing payment:', error);
+      setErrors({ general: 'Błąd połączenia z serwerem. Spróbuj ponownie.' });
+      return false;
+    }
   };
 
   // Obsługa przesłania formularza
@@ -158,26 +283,36 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
     setCurrentStep('processing');
     setIsProcessing(true);
+    setErrors({}); // Wyczyść poprzednie błędy
 
     try {
-      const success = await processPayment();
-      
-      if (success) {
+      // Najpierw zwaliduj koszyk
+      const cartValid = await validateCart();
+      if (!cartValid) {
+        setCurrentStep('form');
+        return;
+      }
+
+      // Następnie przetwórz płatność
+      const paymentSuccess = await processPayment();
+
+      if (paymentSuccess) {
         setCurrentStep('success');
         setPaymentSuccess(true);
+
+        // Odśwież koszyk (powinien być pusty po udanym checkout)
         await clearCart();
-        
+
         // Wywołaj callback sukcesu po krótkim opóźnieniu
         setTimeout(() => {
           onSuccess?.();
         }, 2000);
       } else {
-        // Symulacja błędu płatności
-        setErrors({ general: "Płatność została odrzucona. Spróbuj ponownie." });
         setCurrentStep('form');
       }
     } catch (error) {
-      setErrors({ general: "Wystąpił błąd podczas przetwarzania płatności." });
+      console.error('Checkout error:', error);
+      setErrors({ general: 'Wystąpił nieoczekiwany błąd. Spróbuj ponownie.' });
       setCurrentStep('form');
     } finally {
       setIsProcessing(false);
@@ -247,7 +382,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                     <CreditCard className="w-5 h-5" />
                     Dane karty płatniczej
                   </h3>
-                  
+
                   <div className="space-y-3">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -256,15 +391,21 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                       <input
                         type="text"
                         value={formData.cardNumber}
-                        onChange={(e) => handleInputChange('cardNumber', e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange('cardNumber', e.target.value)
+                        }
                         className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 ${
-                          errors.cardNumber ? 'border-red-300' : 'border-gray-300'
+                          errors.cardNumber
+                            ? 'border-red-300'
+                            : 'border-gray-300'
                         }`}
                         placeholder="1234 5678 9012 3456"
                         maxLength={19}
                       />
                       {errors.cardNumber && (
-                        <p className="text-sm text-red-600 mt-1">{errors.cardNumber}</p>
+                        <p className="text-sm text-red-600 mt-1">
+                          {errors.cardNumber}
+                        </p>
                       )}
                     </div>
 
@@ -276,15 +417,21 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                         <input
                           type="text"
                           value={formData.expiryDate}
-                          onChange={(e) => handleInputChange('expiryDate', e.target.value)}
+                          onChange={(e) =>
+                            handleInputChange('expiryDate', e.target.value)
+                          }
                           className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 ${
-                            errors.expiryDate ? 'border-red-300' : 'border-gray-300'
+                            errors.expiryDate
+                              ? 'border-red-300'
+                              : 'border-gray-300'
                           }`}
                           placeholder="MM/YY"
                           maxLength={5}
                         />
                         {errors.expiryDate && (
-                          <p className="text-sm text-red-600 mt-1">{errors.expiryDate}</p>
+                          <p className="text-sm text-red-600 mt-1">
+                            {errors.expiryDate}
+                          </p>
                         )}
                       </div>
 
@@ -295,7 +442,9 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                         <input
                           type="text"
                           value={formData.cvv}
-                          onChange={(e) => handleInputChange('cvv', e.target.value)}
+                          onChange={(e) =>
+                            handleInputChange('cvv', e.target.value)
+                          }
                           className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 ${
                             errors.cvv ? 'border-red-300' : 'border-gray-300'
                           }`}
@@ -303,7 +452,9 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                           maxLength={4}
                         />
                         {errors.cvv && (
-                          <p className="text-sm text-red-600 mt-1">{errors.cvv}</p>
+                          <p className="text-sm text-red-600 mt-1">
+                            {errors.cvv}
+                          </p>
                         )}
                       </div>
                     </div>
@@ -317,22 +468,32 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                       <input
                         type="checkbox"
                         checked={formData.acceptTerms}
-                        onChange={(e) => handleInputChange('acceptTerms', e.target.checked)}
+                        onChange={(e) =>
+                          handleInputChange('acceptTerms', e.target.checked)
+                        }
                         className="mt-1 w-4 h-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
                       />
                       <span className="text-sm text-gray-700">
-                        Akceptuję{" "}
-                        <a href="#" className="text-orange-600 hover:text-orange-700">
+                        Akceptuję{' '}
+                        <a
+                          href="#"
+                          className="text-orange-600 hover:text-orange-700"
+                        >
                           regulamin
-                        </a>{" "}
-                        i{" "}
-                        <a href="#" className="text-orange-600 hover:text-orange-700">
+                        </a>{' '}
+                        i{' '}
+                        <a
+                          href="#"
+                          className="text-orange-600 hover:text-orange-700"
+                        >
                           politykę prywatności
                         </a>
                       </span>
                     </label>
                     {errors.acceptTerms && (
-                      <p className="text-sm text-red-600 mt-1">{errors.acceptTerms}</p>
+                      <p className="text-sm text-red-600 mt-1">
+                        {errors.acceptTerms}
+                      </p>
                     )}
                   </div>
 
@@ -341,7 +502,9 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                       <input
                         type="checkbox"
                         checked={formData.newsletter}
-                        onChange={(e) => handleInputChange('newsletter', e.target.checked)}
+                        onChange={(e) =>
+                          handleInputChange('newsletter', e.target.checked)
+                        }
                         className="mt-1 w-4 h-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
                       />
                       <span className="text-sm text-gray-700">
