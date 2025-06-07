@@ -111,7 +111,33 @@ export const getProfile = async (req: Request, res: Response, next: NextFunction
         name: true,
         surname: true,
         email: true,
-        cookingHours: true
+        cookingHours: true,
+        recipes: {
+          select: {
+            id: true,
+            title: true,
+            visible: true,
+            category: true,
+            price: true,
+            image: true,
+          }
+        },
+        purchasedRecipes: {
+          select: {
+            id: true,
+            title: true,
+            category: true,
+            image: true,
+          }
+        },
+        ingredients: {
+          select: {
+            id: true,
+            category: true,
+            title: true,
+            unit: true
+          }
+        }
       }
     });
 
