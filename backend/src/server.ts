@@ -7,6 +7,7 @@ import healthRoute from './routes/health.routes';
 import ingredientsRoute from './routes/ingredients.routes';
 import recipeRoute from './routes/recipe.routes';
 import cartRouter from './routes/cart.routes';
+import { orderRoutes } from './routes/order.routes';
 import { errorHandler } from './middleware/errorHandler';
 import swaggerSpec from './swagger.config';
 
@@ -33,6 +34,7 @@ app.use('/api/ingredients', ingredientsRoute);
 app.use('/api', healthRoute);
 app.use('/api/recipe', recipeRoute);
 app.use('/api/cart', cartRouter);
+app.use('/api/orders', orderRoutes);
 
 app.get('/', (req, res) => {
   res.send(
