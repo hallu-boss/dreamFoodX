@@ -1,15 +1,20 @@
-import express from 'express';
-import { createRecipe, getPlayRecipeSteps, getRecipe } from '../controllers/recipe.controller';
-import { authenticate } from '../middleware/authenticate';
-import { validateRecipe } from '../middleware/validators';
-import multer from 'multer';
-import { platform } from 'node:os';
+import express from "express";
+import {
+  createRecipe,
+  getPlayRecipeSteps,
+  getRecipe,
+  getRecipeCovers,
+} from "../controllers/recipe.controller";
+import { authenticate } from "../middleware/authenticate";
+import { validateRecipe } from "../middleware/validators";
+import multer from "multer";
+import { platform } from "node:os";
 
 const router = express.Router();
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
-const uploadMiddleware = upload.single('image');
+const uploadMiddleware = upload.single("image");
 
 /**
  * @swagger
@@ -105,6 +110,52 @@ const uploadMiddleware = upload.single('image');
 
 /**
  * @swagger
+ * /api/recipe/covers:
+ *   get:
+ *     summary: Pobiera okładki przepisów dla strony głównej
+ *     tags: [Recipes]
+ *     parameters:
+ *       - in: query
+ *         name: type
+ *         schema:
+ *           type: string
+ *           enum: [featured, new, popular, category]
+ *         description: Typ wyszukiwania
+ *       - in: query
+ *         name: category
+ *         schema:
+ *           type: string
+ *         description: Kategoria (wymagana dla type=category)
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Wyszukaj po tytule
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Numer strony
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 12
+ *         description: Liczba przepisów na stronę
+ *     responses:
+ *       200:
+ *         description: Lista okładek przepisów
+ *       400:
+ *         description: Błędne parametry
+ *       500:
+ *         description: Błąd serwera
+ */
+// WAŻNE: /covers musi być PRZED /:id
+router.get("/covers", getRecipeCovers);
+
+/**
+ * @swagger
  * /api/recipe/create:
  *   post:
  *     summary: Tworzy nowy przepis
@@ -146,40 +197,7 @@ const uploadMiddleware = upload.single('image');
  *       500:
  *         description: Błąd serwera
  */
-router.post('/create', authenticate, uploadMiddleware, createRecipe);
-
-/**
- * @swagger
- * /api/recipe/{id}:
- *   get:
- *     summary: Pobiera szczegóły przepisu
- *     tags: [Recipes]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: ID przepisu
-*     responses:
- *       200:
- *         description: Szczegóły przepisu
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Recipe'
- *       400:
- *         description: Nieprawidłowe ID przepisu
- *       401:
- *         description: Brak autoryzacji
- *       404:
- *         description: Przepis nie znaleziony
- *       500:
- *         description: Błąd serwera
- */
-router.get('/:id', authenticate, getRecipe);
+router.post("/create", authenticate, uploadMiddleware, createRecipe);
 
 /**
  * @swagger
@@ -209,6 +227,40 @@ router.get('/:id', authenticate, getRecipe);
  *       500:
  *         description: Błąd serwera
  */
-router.get('/play/:id', getPlayRecipeSteps);
+router.get("/play/:id", getPlayRecipeSteps);
+
+/**
+ * @swagger
+ * /api/recipe/{id}:
+ *   get:
+ *     summary: Pobiera szczegóły przepisu
+ *     tags: [Recipes]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID przepisu
+ *     responses:
+ *       200:
+ *         description: Szczegóły przepisu
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Recipe'
+ *       400:
+ *         description: Nieprawidłowe ID przepisu
+ *       401:
+ *         description: Brak autoryzacji
+ *       404:
+ *         description: Przepis nie znaleziony
+ *       500:
+ *         description: Błąd serwera
+ */
+// WAŻNE: /:id musi być NA KOŃCU (po wszystkich konkretnych trasach)
+router.get("/:id", authenticate, getRecipe);
 
 export default router;

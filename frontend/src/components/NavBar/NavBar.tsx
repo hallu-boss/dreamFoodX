@@ -1,9 +1,10 @@
+import React, { useState } from "react";
 import { Menu, Search, ShoppingCart, User, X } from "lucide-react";
 import { MenuItem } from "../../types/menuItem";
 import MainMenu from "./MainMenu";
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useUserData from "../../hooks/useUserData";
+import CartIcon from "../Cart/CartIcon";
 
 interface NavBarProps {
   logoPath: string;
@@ -12,8 +13,7 @@ interface NavBarProps {
 
 function NavBar({ logoPath, logoHref }: NavBarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const {userData} = useUserData();
-
+  const { userData } = useUserData();
   const navigate = useNavigate();
 
   const menu: MenuItem[] = [
@@ -28,7 +28,11 @@ function NavBar({ logoPath, logoHref }: NavBarProps) {
   }
 
   function goToCart() {
-    navigate(userData.isLoggedIn ? "/cart" : "/login");
+    if (userData.isLoggedIn) {
+      navigate("/cart");
+    } else {
+      navigate("/login");
+    }
   }
 
   function newRecipe() {
@@ -77,7 +81,18 @@ function NavBar({ logoPath, logoHref }: NavBarProps) {
             </button>
           )}
           <div className="flex items-center gap-2">
-            <ShoppingCart className="ico-btn" onClick={goToCart} />
+            {/* Ikona koszyka - zawsze widoczna, ale funkcjonalność zależy od logowania */}
+            {userData.isLoggedIn ? (
+              <CartIcon />
+            ) : (
+              <div
+                className="ico-btn cursor-pointer"
+                onClick={goToCart}
+                title="Zaloguj się aby zobaczyć koszyk"
+              >
+                <ShoppingCart className="w-6 h-6" />
+              </div>
+            )}
             <User className="ico-btn" onClick={goToProfile} />
             <Search className="ico-btn" onClick={search} />
           </div>

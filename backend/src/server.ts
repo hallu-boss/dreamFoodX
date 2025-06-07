@@ -6,6 +6,8 @@ import authRoutes from './routes/auth.routes';
 import healthRoute from './routes/health.routes';
 import ingredientsRoute from './routes/ingredients.routes';
 import recipeRoute from './routes/recipe.routes';
+import cartRouter from './routes/cart.routes';
+import { orderRoutes } from './routes/order.routes';
 import { errorHandler } from './middleware/errorHandler';
 import swaggerSpec from './swagger.config';
 
@@ -31,9 +33,13 @@ app.use('/api/auth', authRoutes);
 app.use('/api/ingredients', ingredientsRoute);
 app.use('/api', healthRoute);
 app.use('/api/recipe', recipeRoute);
+app.use('/api/cart', cartRouter);
+app.use('/api/orders', orderRoutes);
 
 app.get('/', (req, res) => {
-  res.send('API działa prawidłowo. Użyj /api/health aby sprawdzić status. Dokumentacja dostępna pod /api-docs');
+  res.send(
+    'API działa prawidłowo. Użyj /api/health aby sprawdzić status. Dokumentacja dostępna pod /api-docs'
+  );
 });
 
 // Error handling middleware
@@ -41,5 +47,7 @@ app.use(errorHandler);
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
-  console.log(`Swagger documentation available at http://localhost:${port}/api-docs`);
+  console.log(
+    `Swagger documentation available at http://localhost:${port}/api-docs`
+  );
 });

@@ -20,10 +20,13 @@ model User {
   email      String   @unique
   password   String
   cookingHours Float
+  newsletter Boolean  @default(false) // Dodane pole dla newslettera
   recipes    Recipe[] @relation("AuthorRecipes")
   reviews    Review[]
   purchasedRecipes Recipe[]  @relation("PurchasedRecipes")
-   ingredients Ingredient[]
+  ingredients Ingredient[]
+  cart             Cart?
+  orders           Order[]  // Dodane zamówienia
 }
 
 model Recipe {
@@ -41,6 +44,8 @@ model Recipe {
   steps        RecipeStep[]
   reviews      Review[]
   purchasers  User[]   @relation("PurchasedRecipes")
+  cartItems    CartItem[]  @relation("CartItems")
+  orderItems   OrderItem[] // Dodane pozycje zamówień
 }
 
 model Review {
@@ -88,3 +93,67 @@ model RecipeStep {
   description             String?
 }
 
+model Cart {
+  id        Int        @id @default(autoincrement())
+  userId    Int        @unique
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     CartItem[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@map("carts")
+}
+
+model CartItem {
+  id       Int      @id @default(autoincrement())
+  cartId   Int
+  cart     Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  recipeId Int
+  recipe   Recipe   @relation("CartItems", fields: [recipeId], references: [id], onDelete: Cascade)
+  addedAt  DateTime @default(now())
+  
+  @@unique([cartId, recipeId]) // Jeden przepis raz w koszyku
+  @@map("cart_items")
+}
+
+// Nowe modele dla zamówień
+enum OrderStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  STRIPE
+  MOCK
+  PAYPAL  // Dla przyszłych rozszerzeń
+}
+
+model Order {
+  id              Int           @id @default(autoincrement())
+  userId          Int
+  user            User          @relation(fields: [userId], references: [id])
+  status          OrderStatus   @default(PENDING)
+  total           Decimal       @db.Decimal(10, 2)
+  paymentMethod   PaymentMethod
+  paymentIntentId String?       // ID z systemu płatności (np. Stripe)
+  items           OrderItem[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id       Int     @id @default(autoincrement())
+  orderId  Int
+  order    Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  recipeId Int
+  recipe   Recipe  @relation(fields: [recipeId], references: [id])
+  price    Decimal @db.Decimal(10, 2) // Cena w momencie zakupu
+  title    String  // Tytuł w momencie zakupu (na wypadek zmiany)
+  
+  @@unique([orderId, recipeId]) // Jeden przepis raz w zamówieniu
+  @@map("order_items")
+}

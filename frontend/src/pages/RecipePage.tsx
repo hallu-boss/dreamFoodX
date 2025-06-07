@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Ingredient, IngredientsList } from "../components/RecipePage/IngredientsList";
 import { RecipeStepCard } from "../components/RecipePage/RecipeStepCard";
+import { useCart } from "../contexts/CartContext";
 import { API_BASE_URL } from "../App";
 
 export interface RecipeStep {
@@ -75,10 +76,12 @@ const dummyIngredients: Ingredient[] = [
 export function RecipePage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { addItem, isLoading: cartLoading } = useCart();
   const [permission, setPermission] = useState(false);
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [activeTab, setActiveTab] = useState('Opis');
   const [loading, setLoading] = useState(true);
+  const [addingToCart, setAddingToCart] = useState(false);
 
   const filteredSteps = recipe?.steps?.filter(step => step.stepType === 'ADD_INGREDIENT') ?? [];
   const ingredients: Ingredient[] = filteredSteps.length > 0 ? filteredSteps.map(step => ({
@@ -105,6 +108,29 @@ export function RecipePage() {
         setLoading(false);
       });
   }, []);
+
+  const handleAddToCart = async () => {
+    if (!recipe || !id) return;
+
+    try {
+      setAddingToCart(true);
+      const success = await addItem(parseInt(id));
+      
+      if (success) {
+        // Przekieruj na stronę koszyka po udanym dodaniu
+        navigate('/cart');
+      } else {
+        // Możesz dodać tutaj wyświetlenie błędu użytkownikowi
+        console.error('Nie udało się dodać przepisu do koszyka');
+        alert('Nie udało się dodać przepisu do koszyka. Spróbuj ponownie.');
+      }
+    } catch (error) {
+      console.error('Błąd podczas dodawania do koszyka:', error);
+      alert('Wystąpił błąd. Spróbuj ponownie.');
+    } finally {
+      setAddingToCart(false);
+    }
+  };
 
   if (loading) return <div>Loading...</div>;
   if (!recipe) return <div>Recipe not found.</div>;
@@ -170,10 +196,11 @@ export function RecipePage() {
                 Wróć na stronę główną
               </button>
               <button
-                onClick={() => navigate('/')}
-                className="mx-2 btn"
+                onClick={handleAddToCart}
+                disabled={addingToCart || cartLoading}
+                className="mx-2 btn disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Dodaj do koszyka
+                {addingToCart ? 'Dodawanie...' : 'Dodaj do koszyka'}
               </button>
             </div>
           </div>
