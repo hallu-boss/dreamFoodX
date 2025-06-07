@@ -1,11 +1,10 @@
 import React, { useState } from "react";
-import { Menu, Search, User, X } from "lucide-react";
+import { Menu, Search, ShoppingCart, User, X } from "lucide-react";
 import { MenuItem } from "../../types/menuItem";
 import MainMenu from "./MainMenu";
 import { useNavigate } from "react-router-dom";
 import useUserData from "../../hooks/useUserData";
 import CartIcon from "../Cart/CartIcon";
-import { useCart } from "../../contexts/CartContext";
 
 interface NavBarProps {
   logoPath: string;
@@ -15,7 +14,6 @@ interface NavBarProps {
 function NavBar({ logoPath, logoHref }: NavBarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { userData } = useUserData();
-  const { refreshCart } = useCart();
   const navigate = useNavigate();
 
   const menu: MenuItem[] = [
@@ -44,11 +42,6 @@ function NavBar({ logoPath, logoHref }: NavBarProps) {
   function search() {
     return;
   }
-
-  // Odśwież koszyk gdy zmieni się status logowania
-  React.useEffect(() => {
-    refreshCart();
-  }, [userData.isLoggedIn, refreshCart]);
 
   return (
     <header className="bg-white shadow-md">
@@ -88,7 +81,7 @@ function NavBar({ logoPath, logoHref }: NavBarProps) {
             </button>
           )}
           <div className="flex items-center gap-2">
-            {/* Zastąpienie prostej ikony koszyka komponentem CartIcon */}
+            {/* Ikona koszyka - zawsze widoczna, ale funkcjonalność zależy od logowania */}
             {userData.isLoggedIn ? (
               <CartIcon />
             ) : (
@@ -97,7 +90,7 @@ function NavBar({ logoPath, logoHref }: NavBarProps) {
                 onClick={goToCart}
                 title="Zaloguj się aby zobaczyć koszyk"
               >
-                <Search className="w-6 h-6" />
+                <ShoppingCart className="w-6 h-6" />
               </div>
             )}
             <User className="ico-btn" onClick={goToProfile} />

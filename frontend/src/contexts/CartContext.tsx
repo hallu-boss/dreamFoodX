@@ -6,6 +6,9 @@ import React, {
   ReactNode,
 } from "react";
 
+// Import API_BASE_URL z App.tsx lub użyj proxy
+const API_BASE_URL = "/api"; // Używa proxy z vite.config.ts
+
 // Typy dla koszyka
 interface CartItem {
   id: number;
@@ -51,9 +54,40 @@ interface CartProviderProps {
 export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   const [items, setItems] = useState<CartItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  useEffect(() => {
+    const initializeCart = async () => {
+      const token = getToken();
+
+      if (token) {
+        // Jeśli zalogowany, pobierz z serwera
+        await refreshCart();
+      } else {
+        // Jeśli niezalogowany, użyj localStorage
+        const savedCart = localStorage.getItem("cart");
+        if (savedCart) {
+          try {
+            const parsedCart = JSON.parse(savedCart);
+            setItems(parsedCart);
+          } catch (error) {
+            console.error("Błąd parsowania koszyka z localStorage:", error);
+            localStorage.removeItem("cart");
+          }
+        }
+      }
+
+      setIsInitialized(true);
+    };
+
+    initializeCart();
+  }, []);
 
   // Funkcja do pobierania tokenu
-  const getToken = () => localStorage.getItem("token");
+  const getToken = () => {
+    const token = localStorage.getItem("token");
+    return token;
+  };
 
   // Funkcja do wykonywania requestów z tokenem
   const makeAuthenticatedRequest = async (
@@ -65,7 +99,10 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
       throw new Error("Użytkownik nie jest zalogowany");
     }
 
-    return fetch(url, {
+    // Dodaj pełny URL z API_BASE_URL jeśli nie jest już pełny
+    const fullUrl = url.startsWith("http") ? url : `${API_BASE_URL}/${url}`;
+
+    return fetch(fullUrl, {
       ...options,
       headers: {
         "Content-Type": "application/json",
@@ -105,26 +142,34 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     return items.some((item) => item.recipeId === recipeId);
   };
 
-  // Odśwież koszyk z serwera (gdy użytkownik się zaloguje)
+  // Odśwież koszyk z serwera (wywołane ręcznie, np. na stronie koszyka)
   const refreshCart = async (): Promise<void> => {
     const token = getToken();
     if (!token) {
-      setItems([]);
+      console.log("Brak tokenu - pozostawienie koszyka lokalnego");
       return;
     }
 
     try {
       setIsLoading(true);
-      const response = await makeAuthenticatedRequest("/api/cart");
+      const response = await makeAuthenticatedRequest("cart");
 
       if (response.ok) {
         const data = await response.json();
         setItems(data.items || []);
+      } else if (response.status === 401) {
+        console.warn("Token wygasł lub jest nieprawidłowy");
+        setItems([]);
+        localStorage.removeItem("token");
+      } else if (response.status === 404) {
+        // Koszyk nie istnieje - to normalne dla nowego użytkownika
+        setItems([]);
       } else {
-        console.error("Błąd pobierania koszyka z serwera");
+        console.error("Błąd pobierania koszyka:", response.status);
       }
     } catch (error) {
       console.error("Błąd synchronizacji koszyka:", error);
+      // Nie czyść koszyka przy błędach sieciowych - pozostaw lokalny
     } finally {
       setIsLoading(false);
     }
@@ -145,7 +190,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
 
       if (token) {
         // Jeśli użytkownik zalogowany, dodaj przez API
-        const response = await makeAuthenticatedRequest("/api/cart/add", {
+        const response = await makeAuthenticatedRequest("cart/add", {
           method: "POST",
           body: JSON.stringify({ recipeId }),
         });
@@ -162,7 +207,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
       } else {
         // Jeśli niezalogowany, pobierz dane przepisu i dodaj lokalnie
         const recipeResponse = await fetch(
-          `/api/recipe/covers?type=&limit=1&search=id:${recipeId}`
+          `${API_BASE_URL}/recipe/covers?type=&limit=1&search=id:${recipeId}`
         );
 
         if (recipeResponse.ok) {
@@ -206,7 +251,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
       if (token) {
         // Jeśli zalogowany, usuń przez API
         const response = await makeAuthenticatedRequest(
-          `/api/cart/remove/${recipeId}`,
+          `cart/remove/${recipeId}`,
           {
             method: "DELETE",
           }
@@ -241,7 +286,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
 
       if (token) {
         // Jeśli zalogowany, wyczyść przez API
-        const response = await makeAuthenticatedRequest("/api/cart/clear", {
+        const response = await makeAuthenticatedRequest("cart/clear", {
           method: "DELETE",
         });
 
