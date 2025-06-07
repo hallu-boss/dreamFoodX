@@ -4,10 +4,10 @@ import React, {
   useState,
   useEffect,
   ReactNode,
-} from "react";
+} from 'react';
 
 // Import API_BASE_URL z App.tsx lub użyj proxy
-const API_BASE_URL = "/api"; // Używa proxy z vite.config.ts
+const API_BASE_URL = '/api'; // Używa proxy z vite.config.ts
 
 // Typy dla koszyka
 interface CartItem {
@@ -41,7 +41,7 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export const useCart = (): CartContextType => {
   const context = useContext(CartContext);
   if (!context) {
-    throw new Error("useCart must be used within a CartProvider");
+    throw new Error('useCart must be used within a CartProvider');
   }
   return context;
 };
@@ -54,7 +54,6 @@ interface CartProviderProps {
 export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   const [items, setItems] = useState<CartItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
     const initializeCart = async () => {
@@ -65,19 +64,17 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
         await refreshCart();
       } else {
         // Jeśli niezalogowany, użyj localStorage
-        const savedCart = localStorage.getItem("cart");
+        const savedCart = localStorage.getItem('cart');
         if (savedCart) {
           try {
             const parsedCart = JSON.parse(savedCart);
             setItems(parsedCart);
           } catch (error) {
-            console.error("Błąd parsowania koszyka z localStorage:", error);
-            localStorage.removeItem("cart");
+            console.error('Błąd parsowania koszyka z localStorage:', error);
+            localStorage.removeItem('cart');
           }
         }
       }
-
-      setIsInitialized(true);
     };
 
     initializeCart();
@@ -85,7 +82,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
 
   // Funkcja do pobierania tokenu
   const getToken = () => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem('token');
     return token;
   };
 
@@ -96,16 +93,16 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   ) => {
     const token = getToken();
     if (!token) {
-      throw new Error("Użytkownik nie jest zalogowany");
+      throw new Error('Użytkownik nie jest zalogowany');
     }
 
     // Dodaj pełny URL z API_BASE_URL jeśli nie jest już pełny
-    const fullUrl = url.startsWith("http") ? url : `${API_BASE_URL}/${url}`;
+    const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}/${url}`;
 
     return fetch(fullUrl, {
       ...options,
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
         ...options.headers,
       },
@@ -114,21 +111,21 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
 
   // Pobierz koszyk z localStorage przy inicjalizacji
   useEffect(() => {
-    const savedCart = localStorage.getItem("cart");
+    const savedCart = localStorage.getItem('cart');
     if (savedCart) {
       try {
         const parsedCart = JSON.parse(savedCart);
         setItems(parsedCart);
       } catch (error) {
-        console.error("Błąd parsowania koszyka z localStorage:", error);
-        localStorage.removeItem("cart");
+        console.error('Błąd parsowania koszyka z localStorage:', error);
+        localStorage.removeItem('cart');
       }
     }
   }, []);
 
   // Zapisz koszyk do localStorage przy każdej zmianie
   useEffect(() => {
-    localStorage.setItem("cart", JSON.stringify(items));
+    localStorage.setItem('cart', JSON.stringify(items));
   }, [items]);
 
   // Oblicz łączną liczbę elementów
@@ -146,29 +143,29 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   const refreshCart = async (): Promise<void> => {
     const token = getToken();
     if (!token) {
-      console.log("Brak tokenu - pozostawienie koszyka lokalnego");
+      console.log('Brak tokenu - pozostawienie koszyka lokalnego');
       return;
     }
 
     try {
       setIsLoading(true);
-      const response = await makeAuthenticatedRequest("cart");
+      const response = await makeAuthenticatedRequest('cart');
 
       if (response.ok) {
         const data = await response.json();
         setItems(data.items || []);
       } else if (response.status === 401) {
-        console.warn("Token wygasł lub jest nieprawidłowy");
+        console.warn('Token wygasł lub jest nieprawidłowy');
         setItems([]);
-        localStorage.removeItem("token");
+        localStorage.removeItem('token');
       } else if (response.status === 404) {
         // Koszyk nie istnieje - to normalne dla nowego użytkownika
         setItems([]);
       } else {
-        console.error("Błąd pobierania koszyka:", response.status);
+        console.error('Błąd pobierania koszyka:', response.status);
       }
     } catch (error) {
-      console.error("Błąd synchronizacji koszyka:", error);
+      console.error('Błąd synchronizacji koszyka:', error);
       // Nie czyść koszyka przy błędach sieciowych - pozostaw lokalny
     } finally {
       setIsLoading(false);
@@ -182,7 +179,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
 
       // Sprawdź czy element już jest w koszyku
       if (isInCart(recipeId)) {
-        console.warn("Przepis już jest w koszyku");
+        console.warn('Przepis już jest w koszyku');
         return false;
       }
 
@@ -190,8 +187,8 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
 
       if (token) {
         // Jeśli użytkownik zalogowany, dodaj przez API
-        const response = await makeAuthenticatedRequest("cart/add", {
-          method: "POST",
+        const response = await makeAuthenticatedRequest('cart/add', {
+          method: 'POST',
           body: JSON.stringify({ recipeId }),
         });
 
@@ -201,7 +198,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
           return true;
         } else {
           const errorData = await response.json();
-          console.error("Błąd dodawania do koszyka:", errorData.error);
+          console.error('Błąd dodawania do koszyka:', errorData.error);
           return false;
         }
       } else {
@@ -230,11 +227,11 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
           }
         }
 
-        console.error("Nie udało się pobrać danych przepisu");
+        console.error('Nie udało się pobrać danych przepisu');
         return false;
       }
     } catch (error) {
-      console.error("Błąd dodawania do koszyka:", error);
+      console.error('Błąd dodawania do koszyka:', error);
       return false;
     } finally {
       setIsLoading(false);
@@ -253,7 +250,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
         const response = await makeAuthenticatedRequest(
           `cart/remove/${recipeId}`,
           {
-            method: "DELETE",
+            method: 'DELETE',
           }
         );
 
@@ -261,7 +258,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
           setItems((prev) => prev.filter((item) => item.recipeId !== recipeId));
           return true;
         } else {
-          console.error("Błąd usuwania z koszyka");
+          console.error('Błąd usuwania z koszyka');
           return false;
         }
       } else {
@@ -270,7 +267,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
         return true;
       }
     } catch (error) {
-      console.error("Błąd usuwania z koszyka:", error);
+      console.error('Błąd usuwania z koszyka:', error);
       return false;
     } finally {
       setIsLoading(false);
@@ -286,15 +283,15 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
 
       if (token) {
         // Jeśli zalogowany, wyczyść przez API
-        const response = await makeAuthenticatedRequest("cart/clear", {
-          method: "DELETE",
+        const response = await makeAuthenticatedRequest('cart/clear', {
+          method: 'DELETE',
         });
 
         if (response.ok) {
           setItems([]);
           return true;
         } else {
-          console.error("Błąd czyszczenia koszyka");
+          console.error('Błąd czyszczenia koszyka');
           return false;
         }
       } else {
@@ -303,7 +300,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
         return true;
       }
     } catch (error) {
-      console.error("Błąd czyszczenia koszyka:", error);
+      console.error('Błąd czyszczenia koszyka:', error);
       return false;
     } finally {
       setIsLoading(false);

@@ -1,12 +1,15 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import {
   ChevronLeft,
   ChevronRight,
   Star,
   ShoppingCart,
   Calendar,
-} from "lucide-react";
-import { useNavigate } from "react-router-dom";
+  Loader2,
+  Check,
+} from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useCart } from '../contexts/CartContext';
 
 // Typy dla przepisu
 interface RecipeAuthor {
@@ -46,10 +49,15 @@ interface RecipeResponse {
 // Komponent okładki przepisu
 const RecipeCard: React.FC<{
   recipe: RecipeCover;
-  size?: "small" | "medium";
-}> = ({ recipe, size = "medium" }) => {
+  size?: 'small' | 'medium';
+}> = ({ recipe, size = 'medium' }) => {
   const navigate = useNavigate();
-  const cardClasses = size === "small" ? "min-w-72 w-72" : "w-full";
+  const { addItem, isInCart, isLoading } = useCart();
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+
+  const cardClasses = size === 'small' ? 'min-w-72 w-72' : 'w-full';
+  const inCart = isInCart(recipe.id);
 
   const handleCardClick = () => {
     navigate(`/recipe/${recipe.id}`);
@@ -59,11 +67,43 @@ const RecipeCard: React.FC<{
     e.stopPropagation(); // Zapobiega przekierowaniu przy kliknięciu na przyciski akcji
   };
 
+  const handleAddToCart = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    if (inCart) {
+      navigate('/cart');
+      return;
+    }
+
+    setIsAddingToCart(true);
+
+    try {
+      const success = await addItem(recipe.id);
+      if (success) {
+        setShowSuccessMessage(true);
+        setTimeout(() => setShowSuccessMessage(false), 2000);
+      } else {
+        console.error('Nie udało się dodać przepisu do koszyka');
+      }
+    } catch (error) {
+      console.error('Błąd podczas dodawania do koszyka:', error);
+    } finally {
+      setIsAddingToCart(false);
+    }
+  };
+
   return (
     <div
       className={`${cardClasses} bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group`}
       onClick={handleCardClick}
     >
+      {/* Komunikat o sukcesie */}
+      {showSuccessMessage && (
+        <div className="absolute top-0 left-0 right-0 bg-green-500 text-white text-center py-2 text-sm font-medium z-10 animate-pulse">
+          ✓ Dodano do koszyka!
+        </div>
+      )}
+
       {/* Zdjęcie przepisu */}
       <div className="relative h-48 bg-gray-200 overflow-hidden">
         {recipe.image ? (
@@ -156,10 +196,30 @@ const RecipeCard: React.FC<{
           </button>
           {recipe.price > 0 && !recipe.isPurchased && !recipe.isOwned && (
             <button
-              className="p-2 bg-green-500 hover:bg-green-600 text-white rounded-md transition-colors"
-              onClick={handleActionClick}
+              className={`p-2 rounded-md transition-colors flex items-center justify-center min-w-[40px] ${
+                inCart
+                  ? 'bg-green-600 hover:bg-green-700 text-white'
+                  : 'bg-green-500 hover:bg-green-600 text-white'
+              } ${
+                isAddingToCart || isLoading
+                  ? 'opacity-75 cursor-not-allowed'
+                  : ''
+              }`}
+              onClick={handleAddToCart}
+              disabled={isAddingToCart || isLoading}
+              title={
+                inCart
+                  ? 'W koszyku - kliknij aby przejść do koszyka'
+                  : 'Dodaj do koszyka'
+              }
             >
-              <ShoppingCart className="w-4 h-4" />
+              {isAddingToCart ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : inCart ? (
+                <Check className="w-4 h-4" />
+              ) : (
+                <ShoppingCart className="w-4 h-4" />
+              )}
             </button>
           )}
         </div>
@@ -270,38 +330,38 @@ const Home: React.FC = () => {
 
   // Sprawdź czy użytkownik jest zalogowany przy montowaniu komponentu
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem('token');
     setIsLoggedIn(!!token);
   }, []);
 
   // Funkcja do pobierania przepisów
   const fetchRecipes = async (type: string, page = 1) => {
     try {
-      const limit = type === "all" ? 12 : 8;
+      const limit = type === 'all' ? 12 : 8;
 
       // Pobierz token z localStorage
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem('token');
 
       // Przygotuj headers
       const headers: HeadersInit = {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       };
 
       // Dodaj Authorization header jeśli token istnieje
       if (token) {
-        headers["Authorization"] = `Bearer ${token}`;
+        headers['Authorization'] = `Bearer ${token}`;
       }
 
       const response = await fetch(
         `/api/recipe/covers?type=${type}&page=${page}&limit=${limit}`,
         {
-          method: "GET",
+          method: 'GET',
           headers: headers,
         }
       );
 
       if (!response.ok) {
-        throw new Error("Nie udało się pobrać przepisów");
+        throw new Error('Nie udało się pobrać przepisów');
       }
 
       const data: RecipeResponse = await response.json();
@@ -315,7 +375,7 @@ const Home: React.FC = () => {
   // Pobieranie danych przy montowaniu komponentu
   useEffect(() => {
     // Pobierz nowe przepisy
-    fetchRecipes("new").then((data) => {
+    fetchRecipes('new').then((data) => {
       if (data) {
         setNewRecipes(data.recipes);
       }
@@ -323,7 +383,7 @@ const Home: React.FC = () => {
     });
 
     // Pobierz popularne przepisy
-    fetchRecipes("popular").then((data) => {
+    fetchRecipes('popular').then((data) => {
       if (data) {
         setPopularRecipes(data.recipes);
       }
@@ -331,7 +391,7 @@ const Home: React.FC = () => {
     });
 
     // Pobierz wszystkie przepisy
-    fetchRecipes("").then((data) => {
+    fetchRecipes('').then((data) => {
       if (data) {
         setAllRecipes(data.recipes);
         setTotalPages(data.pagination.totalPages);
@@ -343,7 +403,7 @@ const Home: React.FC = () => {
   // Funkcja do ładowania kolejnych stron dla sekcji "Wszystkie"
   const loadMoreRecipes = async (page: number) => {
     setLoading((prev) => ({ ...prev, all: true }));
-    const data = await fetchRecipes("", page);
+    const data = await fetchRecipes('', page);
     if (data) {
       setAllRecipes(data.recipes);
       setCurrentPage(page);
