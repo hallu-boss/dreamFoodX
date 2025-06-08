@@ -83,7 +83,7 @@ function NavBar({ logoPath, logoHref }: NavBarProps) {
   }
 
   return (
-    <header className="bg-white shadow-md relative">
+    <header className="sticky top-0 z-50 bg-white shadow-md relative">
       <nav className="w-[92%] px-4 py-2 mx-auto flex items-center justify-between">
         {/* Hamburger menu / Close button */}
         {!isMenuOpen ? (
