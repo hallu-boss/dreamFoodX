@@ -46,6 +46,13 @@ const NewRecipe: React.FC = () => {
   // Osobny stan dla obrazka
   const [recipeImage, setRecipeImage] = useState<File | null>(null);
 
+  // Stany dla ładowania i komunikatów
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [submitStatus, setSubmitStatus] = useState<{
+    type: 'success' | 'error' | null;
+    message: string;
+  }>({ type: null, message: '' });
+
   // Stany dla składników
   const [allIngredients, setAllIngredients] = useState<IngredientItem[]>([]);
   const [availCategories, setAvailCategories] = useState<string[]>([]);
@@ -128,6 +135,9 @@ const NewRecipe: React.FC = () => {
   };
 
   async function handleFinish() {
+    setIsLoading(true);
+    setSubmitStatus({ type: null, message: '' });
+
     try {
       // Create FormData for multipart/form-data upload
       const formDataToSend = new FormData();
@@ -138,7 +148,7 @@ const NewRecipe: React.FC = () => {
         description: formData.description,
         category: formData.category,
         visible: formData.visible,
-        price: formData.price,
+        price: formData.visible ? formData.price : null, // Wyślij price tylko jeśli visible=true
         steps: formData.steps,
       });
 
@@ -159,13 +169,44 @@ const NewRecipe: React.FC = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create recipe');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.message || `Błąd ${response.status}: ${response.statusText}`
+        );
       }
 
       const result = await response.json();
       console.log('Recipe created successfully:', result);
+
+      setSubmitStatus({
+        type: 'success',
+        message: `Przepis "${formData.title}" został pomyślnie utworzony!`,
+      });
+
+      // Opcjonalnie: wyczyść formularz po sukcesie
+      setTimeout(() => {
+        setFormData({
+          title: '',
+          description: '',
+          category: '',
+          visible: false,
+          steps: [],
+        });
+        setRecipeImage(null);
+        setCurrentStep('informacje');
+        setSubmitStatus({ type: null, message: '' });
+      }, 3000);
     } catch (error) {
       console.error('Error creating recipe:', error);
+      setSubmitStatus({
+        type: 'error',
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Wystąpił nieoczekiwany błąd podczas tworzenia przepisu',
+      });
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -252,6 +293,7 @@ const NewRecipe: React.FC = () => {
             ingredientsList={allIngredients} // Zawiera już połączone składniki publiczne + użytkownika
             addStep={addStep}
             updateStepsList={updateStepsList}
+            isLoading={isLoading}
           />
         );
       default:
@@ -274,6 +316,36 @@ const NewRecipe: React.FC = () => {
           {/* Prawa kolumna - aktualny formularz */}
           <div className="md:w-3/4">
             <div className="bg-white p-6 rounded-lg shadow-sm">
+              {/* Komunikat o statusie */}
+              {submitStatus.type && (
+                <div
+                  className={`mb-6 p-4 rounded-lg border-l-4 ${
+                    submitStatus.type === 'success'
+                      ? 'bg-green-50 border-green-400 text-green-700'
+                      : 'bg-red-50 border-red-400 text-red-700'
+                  }`}
+                >
+                  <div className="flex items-center">
+                    <span className="mr-2">
+                      {submitStatus.type === 'success' ? '✅' : '❌'}
+                    </span>
+                    <p className="font-medium">{submitStatus.message}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Animacja ładowania */}
+              {isLoading && (
+                <div className="mb-6 flex items-center justify-center p-8 bg-blue-50 rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                    <p className="text-blue-700 font-medium">
+                      Tworzenie przepisu...
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {renderCurrentStepForm()}
             </div>
           </div>
