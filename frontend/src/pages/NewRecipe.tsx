@@ -25,6 +25,7 @@ export interface NewRecipeInfo {
   title: string;
   description: string;
   category: string;
+  visible: boolean;
   price?: number;
   steps: NewRecipeStep[];
 }
@@ -38,6 +39,7 @@ const NewRecipe: React.FC = () => {
     title: '',
     description: '',
     category: '',
+    visible: false,
     steps: [],
   });
 
@@ -109,6 +111,18 @@ const NewRecipe: React.FC = () => {
       return;
     }
 
+    // Handle checkbox for visible field
+    if (type === 'checkbox' && name === 'visible') {
+      const checked = (e.target as HTMLInputElement).checked;
+      setFormData({
+        ...formData,
+        [name]: checked,
+        // Wyczyść cenę gdy przepis staje się prywatny
+        price: checked ? formData.price : undefined,
+      });
+      return;
+    }
+
     const numVal = name === 'price' ? parseFloat(value) || 0 : value;
     setFormData({ ...formData, [name]: numVal });
   };
@@ -123,6 +137,7 @@ const NewRecipe: React.FC = () => {
         title: formData.title,
         description: formData.description,
         category: formData.category,
+        visible: formData.visible,
         price: formData.price,
         steps: formData.steps,
       });
