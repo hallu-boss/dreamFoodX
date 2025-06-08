@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Home from '../src/pages/Home';
 import NavBar from './components/NavBar/NavBar';
+import Footer from './components/Footer';
 import NewRecipe from './pages/NewRecipe';
 import useUserData from './hooks/useUserData';
 import LoginPage from './pages/LoginPage';
@@ -23,27 +24,38 @@ function App() {
   return (
     <CartProvider>
       <Router>
-        <NavBar logoPath={logoImage} logoHref="/" />
+        <div className="min-h-screen flex flex-col">
+          <NavBar logoPath={logoImage} logoHref="/" />
 
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/recipes" element={<RecipesPage />} />
-          <Route
-            path="/profile"
-            element={<ProfilePage userData={userData} logoutUser={logOut} />}
-          />
-          <Route
-            path="/login"
-            element={<LoginPage preliminaryLogin={preliminaryLogin} />}
-          />
-          <Route path="/new-recipe" element={<NewRecipe />} />
-          <Route path="/cart" element={<CartPage />} />
-          <Route path="/registration" element={<RegisterPage />} />
-          <Route path="/recipe/:id" element={<RecipePage />} />
-          <Route path="/recipe/play/:id" element={<RecipePlayPage />} />
-          <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
-          <Route path="/terms-of-service" element={<TermsOfServicePage />} />
-        </Routes>
+          <main className="flex-1">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/recipes" element={<RecipesPage />} />
+              <Route
+                path="/profile"
+                element={
+                  <ProfilePage userData={userData} logoutUser={logOut} />
+                }
+              />
+              <Route
+                path="/login"
+                element={<LoginPage preliminaryLogin={preliminaryLogin} />}
+              />
+              <Route path="/new-recipe" element={<NewRecipe />} />
+              <Route path="/cart" element={<CartPage />} />
+              <Route path="/registration" element={<RegisterPage />} />
+              <Route path="/recipe/:id" element={<RecipePage />} />
+              <Route path="/recipe/play/:id" element={<RecipePlayPage />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+              <Route
+                path="/terms-of-service"
+                element={<TermsOfServicePage />}
+              />
+            </Routes>
+          </main>
+
+          <Footer />
+        </div>
       </Router>
     </CartProvider>
   );
