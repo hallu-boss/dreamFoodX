@@ -1,13 +1,13 @@
-import { Request, Response, NextFunction } from "express";
-import { PrismaClient, RecipeStep, StepType } from "@prisma/client";
-import { ValidationError } from "../utils/errors";
-import { Decimal } from "@prisma/client/runtime/library";
+import { Request, Response, NextFunction } from 'express';
+import { PrismaClient, RecipeStep, StepType } from '@prisma/client';
+import { ValidationError } from '../utils/errors';
+import { Decimal } from '@prisma/client/runtime/library';
 
 const prisma = new PrismaClient();
 
 interface NewRecipeStep {
   title: string;
-  stepType: "ADD_INGREDIENT" | "COOKING" | "DESCRIPTION";
+  stepType: 'ADD_INGREDIENT' | 'COOKING' | 'DESCRIPTION';
 
   ingredientId?: number;
   amount?: number;
@@ -23,6 +23,7 @@ interface NewRecipeInfo {
   title: string;
   description: string;
   category: string;
+  visible: boolean;
   price: number;
   steps: NewRecipeStep[];
   // Brak pola image w interfejsie, będzie obsługiwane osobno
@@ -52,13 +53,13 @@ export const getRecipeCovers = async (
     const authHeader = req.headers.authorization;
     let userId: number | undefined;
 
-    if (authHeader && authHeader.startsWith("Bearer ")) {
+    if (authHeader && authHeader.startsWith('Bearer ')) {
       try {
-        const token = authHeader.split(" ")[1];
-        const jwt = require("jsonwebtoken");
+        const token = authHeader.split(' ')[1];
+        const jwt = require('jsonwebtoken');
         const decoded = jwt.verify(
           token,
-          process.env.JWT_SECRET || "fallback-secret"
+          process.env.JWT_SECRET || 'fallback-secret'
         ) as any;
         userId = decoded.id;
       } catch (error) {
@@ -82,35 +83,33 @@ export const getRecipeCovers = async (
 
     // Filtrowanie według typu
     switch (type) {
-      case "new":
+      case 'new':
         // Nowe - dodane w przeciągu ostatniego tygodnia
         whereConditions.createdAt = {
           gte: oneWeekAgo,
         };
         break;
 
-      case "featured":
+      case 'featured':
         // Wyróżnione - będą filtrowane po pobraniu danych (średnia ocena > 3 + czas < 2 tygodnie)
         whereConditions.createdAt = {
           gte: twoWeeksAgo,
         };
         break;
 
-      case "popular":
+      case 'popular':
         // Popularne - będą filtrowane po pobraniu danych (średnia ocena >= 4)
         // Nie dodajemy warunków where, filtrujemy po obliczeniu średniej
         break;
 
-      case "category":
+      case 'category':
         // Kategoria - wymaga podania parametru category
         if (category) {
           whereConditions.category = category;
         } else {
-          return res
-            .status(400)
-            .json({
-              error: "Parametr category jest wymagany dla typu category",
-            });
+          return res.status(400).json({
+            error: 'Parametr category jest wymagany dla typu category',
+          });
         }
         break;
     }
@@ -118,8 +117,8 @@ export const getRecipeCovers = async (
     // Wyszukiwanie po tytule
     if (search) {
       whereConditions.OR = [
-        { title: { contains: search, mode: "insensitive" } },
-        { description: { contains: search, mode: "insensitive" } },
+        { title: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
       ];
     }
 
@@ -168,7 +167,7 @@ export const getRecipeCovers = async (
             }
           : false,
       },
-      orderBy: { createdAt: "desc" }, // Domyślnie sortuj po dacie utworzenia
+      orderBy: { createdAt: 'desc' }, // Domyślnie sortuj po dacie utworzenia
     });
 
     // Przetwórz dane dla każdego przepisu
@@ -182,7 +181,7 @@ export const getRecipeCovers = async (
 
       // Oblicz przybliżony czas gotowania na podstawie kroków
       const cookingTimes = recipe.steps
-        .filter((step) => step.stepType === "COOKING" && step.time)
+        .filter((step) => step.stepType === 'COOKING' && step.time)
         .map((step) => {
           // Załóżmy że czas jest w formacie "15 min" lub "1h 30min"
           const timeStr = step.time!;
@@ -207,7 +206,7 @@ export const getRecipeCovers = async (
                 totalCookingTime % 60
               }min`
             : `${totalCookingTime} min`
-          : "Brak danych";
+          : 'Brak danych';
 
       // Policz unikalne składniki
       const uniqueIngredients = new Set(
@@ -218,10 +217,10 @@ export const getRecipeCovers = async (
 
       // Formatuj datę utworzenia do DD.MM.YYYY
       const createdDate = new Date(recipe.createdAt);
-      const formattedDate = createdDate.toLocaleDateString("pl-PL", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
+      const formattedDate = createdDate.toLocaleDateString('pl-PL', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
       });
 
       // Sprawdź status dla zalogowanego użytkownika
@@ -252,19 +251,19 @@ export const getRecipeCovers = async (
     let filteredRecipes = processedRecipes;
 
     switch (type) {
-      case "featured":
+      case 'featured':
         // Wyróżnione: średnia ocena > 3 oraz czas dodania < 2 tygodnie
         filteredRecipes = processedRecipes.filter(
           (recipe) =>
             recipe.averageRating > 3 &&
-            new Date(recipe.createdAt.split(".").reverse().join("-")) >=
+            new Date(recipe.createdAt.split('.').reverse().join('-')) >=
               twoWeeksAgo
         );
         // Sortuj według oceny malejąco
         filteredRecipes.sort((a, b) => b.averageRating - a.averageRating);
         break;
 
-      case "popular":
+      case 'popular':
         // Popularne: ocena >= 4
         filteredRecipes = processedRecipes.filter(
           (recipe) => recipe.averageRating >= 4
@@ -278,16 +277,16 @@ export const getRecipeCovers = async (
         });
         break;
 
-      case "new":
+      case 'new':
         // Nowe: sortuj według daty utworzenia malejąco (najnowsze pierwsze)
         filteredRecipes.sort((a, b) => {
-          const dateA = new Date(a.createdAt.split(".").reverse().join("-"));
-          const dateB = new Date(b.createdAt.split(".").reverse().join("-"));
+          const dateA = new Date(a.createdAt.split('.').reverse().join('-'));
+          const dateB = new Date(b.createdAt.split('.').reverse().join('-'));
           return dateB.getTime() - dateA.getTime();
         });
         break;
 
-      case "category":
+      case 'category':
         // Kategoria: sortuj według oceny malejąco
         filteredRecipes.sort((a, b) => b.averageRating - a.averageRating);
         break;
@@ -295,8 +294,8 @@ export const getRecipeCovers = async (
       default:
         // Domyślnie sortuj według daty utworzenia malejąco
         filteredRecipes.sort((a, b) => {
-          const dateA = new Date(a.createdAt.split(".").reverse().join("-"));
-          const dateB = new Date(b.createdAt.split(".").reverse().join("-"));
+          const dateA = new Date(a.createdAt.split('.').reverse().join('-'));
+          const dateB = new Date(b.createdAt.split('.').reverse().join('-'));
           return dateB.getTime() - dateA.getTime();
         });
         break;
@@ -317,11 +316,11 @@ export const getRecipeCovers = async (
         limit,
         totalPages,
       },
-      type: type || "all",
+      type: type || 'all',
     });
   } catch (error) {
-    console.error("[GET /recipe/covers]", error);
-    res.status(500).json({ error: "Internal server error" });
+    console.error('[GET /recipe/covers]', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 };
 
@@ -332,7 +331,7 @@ export const getRecipe = async (
 ) => {
   const recipeId = parseInt(req.params.id);
   if (isNaN(recipeId))
-    return res.status(400).json({ error: "Invalid recipe ID" });
+    return res.status(400).json({ error: 'Invalid recipe ID' });
 
   try {
     const recipe = await prisma.recipe.findUniqueOrThrow({
@@ -380,7 +379,7 @@ export const getRecipe = async (
     });
 
     if (!recipe) {
-      return res.status(404).json({ error: "Recipe not found" });
+      return res.status(404).json({ error: 'Recipe not found' });
     }
 
     const userId = (req as any).user.id;
@@ -411,8 +410,8 @@ export const getRecipe = async (
       permission: false,
     });
   } catch (error) {
-    console.error("[GET /recipe/:id]", error);
-    res.status(500).json({ error: "Internal server error" });
+    console.error('[GET /recipe/:id]', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 };
 
@@ -429,11 +428,11 @@ export const createRecipe = async (
       ? JSON.parse(req.body.recipeData)
       : req.body;
 
-    const { title, description, category, price, steps } = recipeData;
+    const { title, description, category, visible, price, steps } = recipeData;
 
     // Sprawdź czy wszystkie składniki istnieją
     for (const step of steps) {
-      if (step.stepType !== "ADD_INGREDIENT") continue;
+      if (step.stepType !== 'ADD_INGREDIENT') continue;
       const ingredient = await prisma.ingredient.findUnique({
         where: { id: step.ingredientId },
       });
@@ -445,7 +444,7 @@ export const createRecipe = async (
       }
     }
 
-    let imageUrl = "";
+    let imageUrl = '';
 
     // Obsługa pliku obrazu, jeśli istnieje
     if (req.file) {
@@ -455,14 +454,14 @@ export const createRecipe = async (
       // Konwersja bufora pliku na Blob
       const fileBlob = new Blob([req.file.buffer], { type: req.file.mimetype });
 
-      fileFormData.append("file", fileBlob, req.file.originalname);
-      fileFormData.append("upload_preset", "dreamFoodX-images");
-      fileFormData.append("api_key", process.env.CLOUDINARY_API_KEY || "123");
+      fileFormData.append('file', fileBlob, req.file.originalname);
+      fileFormData.append('upload_preset', 'dreamFoodX-images');
+      fileFormData.append('api_key', process.env.CLOUDINARY_API_KEY || '123');
 
       const imgRes = await fetch(
-        "https://api.cloudinary.com/v1_1/dco9zum8l/image/upload",
+        'https://api.cloudinary.com/v1_1/dco9zum8l/image/upload',
         {
-          method: "POST",
+          method: 'POST',
           body: fileFormData,
         }
       ).then((r) => r.json());
@@ -470,7 +469,7 @@ export const createRecipe = async (
       if (imgRes.secure_url) {
         imageUrl = imgRes.secure_url;
       } else {
-        throw new Error("Failed to upload image to Cloudinary");
+        throw new Error('Failed to upload image to Cloudinary');
       }
     }
 
@@ -480,7 +479,8 @@ export const createRecipe = async (
         title,
         description,
         category,
-        price,
+        price: visible ? price : 0.0,
+        visible,
         image: imageUrl,
         userId,
         steps: {
@@ -493,7 +493,7 @@ export const createRecipe = async (
     });
 
     res.status(201).json({
-      message: "Przepis utworzony pomyślnie",
+      message: 'Przepis utworzony pomyślnie',
       recipe: {
         ...newRecipe,
         price: Number(newRecipe.price), // Konwersja Decimal na number
@@ -548,7 +548,7 @@ export const getPlayRecipeSteps = async (
 ) => {
   const recipeId = parseInt(req.params.id);
   if (isNaN(recipeId))
-    return res.status(400).json({ error: "Invalid recipe ID" });
+    return res.status(400).json({ error: 'Invalid recipe ID' });
 
   try {
     const recipe = await prisma.recipe.findUniqueOrThrow({
@@ -577,7 +577,7 @@ export const getPlayRecipeSteps = async (
 
     return res.json(recipe);
   } catch (error) {
-    console.error("[GET /recipe/play/:id]", error);
-    res.status(500).json({ error: "Internal server error" });
+    console.error('[GET /recipe/play/:id]', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 };

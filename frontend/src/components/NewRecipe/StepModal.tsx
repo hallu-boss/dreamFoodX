@@ -1,10 +1,10 @@
-import React, { useState } from "react";
-import { IngredientItem } from "../../types/newRecipe";
-import { StepTypeOption, StepTypeSelector } from "./StepTypeSelector.tsx";
-import { AddIngredientView } from "./views/AddIngredientView.tsx";
-import { CookView } from "./views/CookView.tsx";
-import { DecriptionView } from "./views/DescriptionView.tsx";
-import { NewRecipeStep } from "../../pages/NewRecipe.tsx";
+import React, { useState } from 'react';
+import { IngredientItem } from '../../types/newRecipe';
+import { StepTypeOption, StepTypeSelector } from './StepTypeSelector.tsx';
+import { AddIngredientView } from './views/AddIngredientView.tsx';
+import { CookView } from './views/CookView.tsx';
+import { DecriptionView } from './views/DescriptionView.tsx';
+import { NewRecipeStep } from '../../pages/NewRecipe.tsx';
 
 interface StepModalProps {
   availIngredients: IngredientItem[];
@@ -20,17 +20,16 @@ export const StepModal: React.FC<StepModalProps> = ({
   onSave,
 }) => {
   const [stepData, setStepData] = useState<NewRecipeStep>({
-    title: "",
-    stepType: "ADD_INGREDIENT",
+    title: '',
+    stepType: 'ADD_INGREDIENT',
     ingredientId: -1,
-    amount: 0,
   });
 
   const stepTypeOptions: StepTypeOption[] = [
-    { value: "ADD_INGREDIENT", label: "Dodaj składnik" },
-    { value: "COOKING", label: "Gotuj" },
-    { value: "DESCRIPTION", label: "Tekst" },
-  ]
+    { value: 'ADD_INGREDIENT', label: 'Dodaj składnik' },
+    { value: 'COOKING', label: 'Gotuj' },
+    { value: 'DESCRIPTION', label: 'Tekst' },
+  ];
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -41,34 +40,34 @@ export const StepModal: React.FC<StepModalProps> = ({
     setStepData({ ...stepData, [name]: value });
   };
 
-  const handleRadioChange = (value: NewRecipeStep["stepType"]) => {
+  const handleRadioChange = (value: NewRecipeStep['stepType']) => {
     switch (value) {
-      case "ADD_INGREDIENT":
+      case 'ADD_INGREDIENT':
         setStepData({
           title: stepData.title,
-          stepType: "ADD_INGREDIENT",
+          stepType: 'ADD_INGREDIENT',
           ingredientId: -1,
-          amount: 0
+          amount: 0,
         });
         break;
-      case "COOKING":
+      case 'COOKING':
         setStepData({
           title: stepData.title,
-          stepType: "COOKING",
-          time: "00:00",
+          stepType: 'COOKING',
+          time: '00:00',
           temperature: 3,
           mixSpeed: 3,
         });
         break;
-      case "DESCRIPTION":
+      case 'DESCRIPTION':
         setStepData({
           title: stepData.title,
-          stepType: "DESCRIPTION",
-          description: "",
+          stepType: 'DESCRIPTION',
+          description: '',
         });
         break;
     }
-    console.log(stepData)
+    console.log(stepData);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -77,27 +76,27 @@ export const StepModal: React.FC<StepModalProps> = ({
     let stepToSave: NewRecipeStep;
 
     switch (stepData.stepType) {
-      case "ADD_INGREDIENT":
+      case 'ADD_INGREDIENT':
         stepToSave = {
           title: stepData.title,
-          stepType: "ADD_INGREDIENT",
+          stepType: 'ADD_INGREDIENT',
           ingredientId: stepData.ingredientId,
           amount: stepData.amount,
         };
         break;
-      case "COOKING":
+      case 'COOKING':
         stepToSave = {
           title: stepData.title,
-          stepType: "COOKING",
+          stepType: 'COOKING',
           time: stepData.time,
           temperature: stepData.temperature,
           mixSpeed: stepData.mixSpeed,
         };
         break;
-      case "DESCRIPTION":
+      case 'DESCRIPTION':
         stepToSave = {
           title: stepData.title,
-          stepType: "DESCRIPTION",
+          stepType: 'DESCRIPTION',
           description: stepData.description,
         };
         break;
@@ -105,8 +104,8 @@ export const StepModal: React.FC<StepModalProps> = ({
 
     onSave(stepToSave);
     setStepData({
-      title: "",
-      stepType: "ADD_INGREDIENT",
+      title: '',
+      stepType: 'ADD_INGREDIENT',
       ingredientId: -1,
       amount: 0,
     });
@@ -150,10 +149,7 @@ export const StepModal: React.FC<StepModalProps> = ({
           )}
 
           {stepData.stepType === 'COOKING' && (
-            <CookView
-              cookingStep={stepData}
-              setCookingStep={setStepData}
-            />
+            <CookView cookingStep={stepData} setCookingStep={setStepData} />
           )}
 
           {stepData.stepType === 'DESCRIPTION' && (

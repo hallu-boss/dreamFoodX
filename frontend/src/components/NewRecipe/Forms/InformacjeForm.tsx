@@ -1,15 +1,17 @@
 // InformacjeForm.tsx - Komponent formularza informacji
-import React, { useState } from "react";
-import { UploadIcon } from "../../../Icons";
-import { ArrowRight } from "lucide-react";
-import { NewRecipeInfo } from "../../../pages/NewRecipe";
+import React, { useState } from 'react';
+import { UploadIcon } from '../../../Icons';
+import { ArrowRight } from 'lucide-react';
+import { NewRecipeInfo } from '../../../pages/NewRecipe';
 
 interface InformacjeFormProps {
   formData: NewRecipeInfo;
   recipeImage?: File | null;
   handleRecipeImageChange: (image: File) => void;
   handleInputChange: (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => void;
   handleNextStep: () => void;
 }
@@ -29,13 +31,26 @@ const InformacjeForm: React.FC<InformacjeFormProps> = ({
     const image = e.target.files?.[0];
     if (image) {
       handleRecipeImageChange(image);
-      console.log(image)
+      console.log(image);
       setPreviewUrl(URL.createObjectURL(image));
     }
   };
 
   const handleImageClick = () => {
-    document.getElementById("image")?.click();
+    document.getElementById('image')?.click();
+  };
+
+  const handleVisibilityToggle = () => {
+    const fakeEvent = {
+      target: {
+        name: 'visible',
+        value: !formData.visible ? 'true' : 'false',
+        type: 'checkbox',
+        checked: !formData.visible,
+      } as HTMLInputElement,
+    } as React.ChangeEvent<HTMLInputElement>;
+
+    handleInputChange(fakeEvent);
   };
 
   return (
@@ -94,20 +109,65 @@ const InformacjeForm: React.FC<InformacjeFormProps> = ({
         </div>
       </div>
 
-      <div className="space-y-2">
-        <label htmlFor="price" className="block font-medium">
-          Cena
-        </label>
-        <input
-          type="number"
-          id="price"
-          name="price"
-          value={formData.price}
-          pattern="\d*"
-          placeholder="123"
-          onChange={handleInputChange}
-          className="w-full p-2 border rounded bg-gray-50"
-        />
+      <div className="flex items-end gap-3">
+        <button className="mb-1" onClick={handleVisibilityToggle}>
+          <span
+            className={`
+      inline-flex 
+      items-center 
+      px-2 py-1 
+      rounded-full 
+      border-2 
+      transition-colors duration-200
+      ${
+        formData.visible
+          ? 'bg-plant-50 hover:bg-plant-100 border-plant-200'
+          : 'bg-gray-100 hover:bg-gray-200 border-gray-300'
+      }
+      `}
+          >
+            {formData.visible ? '🌐 Publiczny' : '🔒 Prywatny'}
+          </span>
+        </button>
+
+        <div className="flex-1">
+          <label
+            htmlFor="price"
+            className="block text-sm font-medium text-gray-700 mb-2"
+          >
+            Cena produktu *
+          </label>
+          <div className="relative">
+            <input
+              type="number"
+              id="price"
+              value={formData.price}
+              onChange={handleInputChange}
+              placeholder="0.00"
+              min="0"
+              step="0.01"
+              disabled={!formData.visible}
+              className={`
+          w-full px-3 py-2 pr-12 border border-gray-300 rounded-md shadow-sm 
+          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+          ${
+            !formData.visible
+              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              : ''
+          }
+        `}
+            />
+            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+              <span
+                className={`text-sm font-medium ${
+                  !formData.visible ? 'text-gray-400' : 'text-gray-500'
+                }`}
+              >
+                zł
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="space-y-2">
