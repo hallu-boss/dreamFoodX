@@ -1,15 +1,17 @@
 // InformacjeForm.tsx - Komponent formularza informacji
-import React, { useState } from "react";
-import { UploadIcon } from "../../../Icons";
-import { ArrowRight } from "lucide-react";
-import { NewRecipeInfo } from "../../../pages/NewRecipe";
+import React, { useState } from 'react';
+import { UploadIcon } from '../../../Icons';
+import { ArrowRight } from 'lucide-react';
+import { NewRecipeInfo } from '../../../pages/NewRecipe';
 
 interface InformacjeFormProps {
   formData: NewRecipeInfo;
   recipeImage?: File | null;
   handleRecipeImageChange: (image: File) => void;
   handleInputChange: (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => void;
   handleNextStep: () => void;
 }
@@ -29,13 +31,13 @@ const InformacjeForm: React.FC<InformacjeFormProps> = ({
     const image = e.target.files?.[0];
     if (image) {
       handleRecipeImageChange(image);
-      console.log(image)
+      console.log(image);
       setPreviewUrl(URL.createObjectURL(image));
     }
   };
 
   const handleImageClick = () => {
-    document.getElementById("image")?.click();
+    document.getElementById('image')?.click();
   };
 
   return (
@@ -104,7 +106,6 @@ const InformacjeForm: React.FC<InformacjeFormProps> = ({
           name="price"
           value={formData.price}
           pattern="\d*"
-          placeholder="123"
           onChange={handleInputChange}
           className="w-full p-2 border rounded bg-gray-50"
         />
