@@ -36,14 +36,14 @@ interface NewRecipeInfo {
 export const getRecipeCovers = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     // Pobierz parametry zapytania
     const page = Math.max(1, parseInt(req.query.page as string) || 1);
     const limit = Math.min(
       50,
-      Math.max(1, parseInt(req.query.limit as string) || 12)
+      Math.max(1, parseInt(req.query.limit as string) || 12),
     );
     const type = req.query.type as string; // 'featured', 'new', 'popular', 'category'
     const category = req.query.category as string;
@@ -59,7 +59,7 @@ export const getRecipeCovers = async (
         const jwt = require('jsonwebtoken');
         const decoded = jwt.verify(
           token,
-          process.env.JWT_SECRET || 'fallback-secret'
+          process.env.JWT_SECRET || 'fallback-secret',
         ) as any;
         userId = decoded.id;
       } catch (error) {
@@ -102,10 +102,29 @@ export const getRecipeCovers = async (
         // Nie dodajemy warunków where, filtrujemy po obliczeniu średniej
         break;
 
+      case 'free':
+        whereConditions.price = 0;
+        break;
+
       case 'category':
         // Kategoria - wymaga podania parametru category
         if (category) {
-          whereConditions.category = category;
+          const categoryMapping: Record<string, string> = {
+            Obiady: 'obiad',
+            Desery: 'deser',
+            Śniadania: 'sniadanie',
+            Przekąski: 'przekąska',
+            Napoje: 'napój',
+            Dodatki: 'dodatek',
+          };
+
+          const dbCategory =
+            categoryMapping[category] || category.toLowerCase();
+
+          whereConditions.category = {
+            equals: dbCategory,
+            mode: 'insensitive', // Case-insensitive comparison
+          };
         } else {
           return res.status(400).json({
             error: 'Parametr category jest wymagany dla typu category',
@@ -197,7 +216,7 @@ export const getRecipeCovers = async (
 
       const totalCookingTime = cookingTimes.reduce(
         (sum, time) => sum + time,
-        0
+        0,
       );
       const cookingTime =
         totalCookingTime > 0
@@ -212,7 +231,7 @@ export const getRecipeCovers = async (
       const uniqueIngredients = new Set(
         recipe.steps
           .filter((step) => step.ingredient)
-          .map((step) => step.ingredient!.id)
+          .map((step) => step.ingredient!.id),
       );
 
       // Formatuj datę utworzenia do DD.MM.YYYY
@@ -257,7 +276,7 @@ export const getRecipeCovers = async (
           (recipe) =>
             recipe.averageRating > 3 &&
             new Date(recipe.createdAt.split('.').reverse().join('-')) >=
-              twoWeeksAgo
+              twoWeeksAgo,
         );
         // Sortuj według oceny malejąco
         filteredRecipes.sort((a, b) => b.averageRating - a.averageRating);
@@ -266,7 +285,7 @@ export const getRecipeCovers = async (
       case 'popular':
         // Popularne: ocena >= 4
         filteredRecipes = processedRecipes.filter(
-          (recipe) => recipe.averageRating >= 4
+          (recipe) => recipe.averageRating >= 4,
         );
         // Sortuj według oceny malejąco, potem według liczby recenzji
         filteredRecipes.sort((a, b) => {
@@ -327,7 +346,7 @@ export const getRecipeCovers = async (
 export const getRecipe = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const recipeId = parseInt(req.params.id);
   if (isNaN(recipeId))
@@ -418,7 +437,7 @@ export const getRecipe = async (
 export const createRecipe = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const userId = (req as any).user.id;
@@ -439,7 +458,7 @@ export const createRecipe = async (
       if (!ingredient) {
         throw new ValidationError(
           `Składnik o ID ${step.ingredientId} nie istnieje`,
-          400
+          400,
         );
       }
     }
@@ -463,7 +482,7 @@ export const createRecipe = async (
         {
           method: 'POST',
           body: fileFormData,
-        }
+        },
       ).then((r) => r.json());
 
       if (imgRes.secure_url) {
@@ -507,7 +526,7 @@ export const createRecipe = async (
 export const hasAccesToRecipe = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const recipeId = parseInt(req.params.id);
@@ -544,7 +563,7 @@ export const hasAccesToRecipe = async (
 export const getPlayRecipeSteps = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const recipeId = parseInt(req.params.id);
   if (isNaN(recipeId))
