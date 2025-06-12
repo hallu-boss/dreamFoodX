@@ -4,21 +4,6 @@ import { ArrowLeftIcon, PlusIcon } from '../../../Icons';
 import { IngredientItem } from '../../../types/newRecipe';
 import { StepModal } from '../StepModal';
 import RecipeStepCard from '../RecipeStepCard';
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-} from '@dnd-kit/core';
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
 import { NewRecipeStep } from '../../../pages/NewRecipe';
 
 interface KrokiFormProps {
@@ -26,8 +11,9 @@ interface KrokiFormProps {
   handleFinish: () => void;
   stepsList: NewRecipeStep[];
   ingredientsList: IngredientItem[];
-  addStep: (step: NewRecipeStep) => void;
-  updateStepsList: (newSteps: NewRecipeStep[]) => void;
+  addStep: (step: Omit<NewRecipeStep, 'id'>) => void;
+  removeStep: (stepId: string) => void;
+  getIngredientName: (id: number) => string;
   isLoading?: boolean;
 }
 
@@ -37,48 +23,15 @@ const KrokiForm: React.FC<KrokiFormProps> = ({
   stepsList,
   ingredientsList,
   addStep,
-  updateStepsList,
+  removeStep,
+  getIngredientName,
   isLoading = false,
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Konfiguracja sensorów dla dnd-kit
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
-
-  const handleAddStep = (stepData: NewRecipeStep) => {
+  const handleAddStep = (stepData: Omit<NewRecipeStep, 'id'>) => {
     addStep(stepData);
     setIsModalOpen(false);
-  };
-
-  const getIngredientName = (id: number) => {
-    const ingredient = ingredientsList.find((item) => item.id == id);
-    return ingredient ? ingredient.title : 'Nieznany składnik';
-  };
-
-  // Obsługa zakończenia przeciągania
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-
-    if (over && active.id !== over.id) {
-      const oldIndex = stepsList.findIndex(
-        (_, index) => `step-${index}` === active.id
-      );
-      const newIndex = stepsList.findIndex(
-        (_, index) => `step-${index}` === over.id
-      );
-
-      console.log(`old: ${oldIndex}, new: ${newIndex}`);
-
-      if (oldIndex !== -1 && newIndex !== -1) {
-        const newStepsList = arrayMove(stepsList, oldIndex, newIndex);
-        updateStepsList(newStepsList);
-      }
-    }
   };
 
   return (
@@ -86,44 +39,38 @@ const KrokiForm: React.FC<KrokiFormProps> = ({
       <h2 className="text-2xl font-bold mb-6">Kroki przygotowania</h2>
 
       {stepsList.length > 0 ? (
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-        >
-          <SortableContext
-            items={stepsList.map((_, index) => `step-${index}`)}
-            strategy={verticalListSortingStrategy}
-          >
-            <div className="space-y-3 mb-6">
-              {stepsList.map((step, index) => (
-                <RecipeStepCard
-                  key={`step-${index}`}
-                  step={step}
-                  getIngredientName={getIngredientName}
-                  id={`step-${index}`}
-                />
-              ))}
-            </div>
-          </SortableContext>
-        </DndContext>
+        <div className="space-y-4 mb-6">
+          {stepsList.map((step, index) => (
+            <RecipeStepCard
+              key={step.id}
+              step={step}
+              stepNumber={index + 1}
+              getIngredientName={getIngredientName}
+              onRemove={() => removeStep(step.id)}
+              id={step.id}
+              isDisabled={isLoading}
+            />
+          ))}
+        </div>
       ) : (
-        <div className="text-center py-8 text-gray-500">
-          Brak kroków. Dodaj pierwszy krok przygotowania.
+        <div className="text-center py-12 text-gray-500 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
+          <div className="text-lg mb-2">Brak kroków przygotowania</div>
+          <div className="text-sm">Dodaj pierwszy krok, aby rozpocząć</div>
         </div>
       )}
 
-      <div className="text-center my-4">
+      <div className="text-center my-6">
         <button
           onClick={() => setIsModalOpen(true)}
           disabled={isLoading}
-          className={`p-2 focus:outline-none transition-colors duration-200 ${
+          className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg border-2 border-dashed transition-all duration-200 ${
             isLoading
-              ? 'text-gray-400 cursor-not-allowed'
-              : 'text-plant-600 hover:text-plant-800'
+              ? 'border-gray-200 text-gray-400 cursor-not-allowed'
+              : 'border-plant-300 text-plant-600 hover:border-plant-400 hover:text-plant-700 hover:bg-plant-50'
           }`}
         >
           <PlusIcon />
+          Dodaj krok
         </button>
       </div>
 
@@ -131,10 +78,10 @@ const KrokiForm: React.FC<KrokiFormProps> = ({
         <button
           onClick={handlePrevStep}
           disabled={isLoading}
-          className={`px-2 py-1 border border-gray-300 rounded flex items-center transition-colors duration-200 ${
+          className={`px-4 py-2 border border-gray-300 rounded-lg flex items-center gap-2 transition-all duration-200 ${
             isLoading
               ? 'bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200'
-              : 'hover:bg-gray-100 text-gray-700'
+              : 'hover:bg-gray-100 text-gray-700 hover:border-gray-400'
           }`}
         >
           <ArrowLeftIcon />
@@ -144,15 +91,15 @@ const KrokiForm: React.FC<KrokiFormProps> = ({
         <button
           onClick={handleFinish}
           disabled={isLoading || stepsList.length === 0}
-          className={`btn transition-all duration-200 ${
+          className={`px-6 py-2 rounded-lg font-medium transition-all duration-200 ${
             isLoading || stepsList.length === 0
               ? 'opacity-50 cursor-not-allowed bg-gray-300 text-gray-500'
-              : 'hover:bg-plant-700'
+              : 'bg-plant-600 text-white hover:bg-plant-700 shadow-sm hover:shadow-md'
           }`}
         >
           {isLoading ? (
-            <div className="flex items-center">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+            <div className="flex items-center gap-2">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
               Zapisywanie...
             </div>
           ) : (

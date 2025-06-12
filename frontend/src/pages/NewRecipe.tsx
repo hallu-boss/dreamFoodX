@@ -1,13 +1,32 @@
 import React, { useEffect, useState } from 'react';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
 
 import { RecipeFormStep, IngredientItem } from '../types/newRecipe';
 import NewRecipeLegend from '../components/NewRecipe/NewRecipeLegend';
 import InformacjeForm from '../components/NewRecipe/Forms/InformacjeForm';
 import SkladnikiForm from '../components/NewRecipe/Forms/SkladnikiForm';
 import KrokiForm from '../components/NewRecipe/Forms/KrokiForm';
+import RecipeStepCard from '../components/NewRecipe/RecipeStepCard';
 import { API_BASE_URL } from '../App';
 
 export interface NewRecipeStep {
+  id: string; // Dodajemy unique ID dla każdego kroku
   title: string;
   stepType: 'ADD_INGREDIENT' | 'COOKING' | 'DESCRIPTION';
 
@@ -57,6 +76,21 @@ const NewRecipe: React.FC = () => {
   const [allIngredients, setAllIngredients] = useState<IngredientItem[]>([]);
   const [availCategories, setAvailCategories] = useState<string[]>([]);
 
+  // Stan dla DnD
+  const [activeStep, setActiveStep] = useState<NewRecipeStep | null>(null);
+
+  // Konfiguracja sensorów dla dnd-kit
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
+
   useEffect(() => {
     // Pobierz wszystkie składniki (publiczne) - potrzebne do kategorii
     const fetchAllIngredients = async () => {
@@ -101,11 +135,16 @@ const NewRecipe: React.FC = () => {
     }
   };
 
+  // Generowanie unikalnego ID dla nowego kroku
+  const generateStepId = () => {
+    return `step-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  };
+
   // Obsługa zmiany wartości w formularzu
   const handleInputChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
+    >,
   ) => {
     const { name, value, type } = e.target as HTMLInputElement;
 
@@ -142,14 +181,17 @@ const NewRecipe: React.FC = () => {
       // Create FormData for multipart/form-data upload
       const formDataToSend = new FormData();
 
+      // Usuń ID z kroków przed wysłaniem (backend może ich nie potrzebować)
+      const stepsForBackend = formData.steps.map(({ id, ...step }) => step);
+
       // Add recipe data as JSON
       const recipeDataJSON = JSON.stringify({
         title: formData.title,
         description: formData.description,
         category: formData.category,
         visible: formData.visible,
-        price: formData.visible ? formData.price : null, // Wyślij price tylko jeśli visible=true
-        steps: formData.steps,
+        price: formData.visible ? formData.price : null,
+        steps: stepsForBackend,
       });
 
       formDataToSend.append('recipeData', recipeDataJSON);
@@ -163,7 +205,6 @@ const NewRecipe: React.FC = () => {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
-          // Don't set Content-Type here - FormData sets it automatically with boundary
         },
         body: formDataToSend,
       });
@@ -171,7 +212,8 @@ const NewRecipe: React.FC = () => {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(
-          errorData.message || `Błąd ${response.status}: ${response.statusText}`
+          errorData.message ||
+            `Błąd ${response.status}: ${response.statusText}`,
         );
       }
 
@@ -211,18 +253,55 @@ const NewRecipe: React.FC = () => {
   }
 
   // Funkcje do obsługi kroków
-  const addStep = (step: NewRecipeStep) => {
+  const addStep = (stepData: Omit<NewRecipeStep, 'id'>) => {
+    const newStep: NewRecipeStep = {
+      ...stepData,
+      id: generateStepId(),
+    };
+
     setFormData({
       ...formData,
-      steps: [...formData.steps, step],
+      steps: [...formData.steps, newStep],
     });
   };
 
-  const updateStepsList = (newSteps: NewRecipeStep[]) => {
+  const removeStep = (stepId: string) => {
     setFormData({
       ...formData,
-      steps: newSteps,
+      steps: formData.steps.filter((step) => step.id !== stepId),
     });
+  };
+
+  const getIngredientName = (id: number) => {
+    const ingredient = allIngredients.find((item) => item.id === id);
+    return ingredient ? ingredient.title : 'Nieznany składnik';
+  };
+
+  // Obsługa DnD
+  const handleDragStart = (event: DragStartEvent) => {
+    const stepId = event.active.id.toString();
+    const step = formData.steps.find((s) => s.id === stepId);
+    setActiveStep(step || null);
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveStep(null);
+
+    if (!over || active.id === over.id) {
+      return;
+    }
+
+    const oldIndex = formData.steps.findIndex((step) => step.id === active.id);
+    const newIndex = formData.steps.findIndex((step) => step.id === over.id);
+
+    if (oldIndex !== -1 && newIndex !== -1) {
+      const newSteps = arrayMove(formData.steps, oldIndex, newIndex);
+      setFormData({
+        ...formData,
+        steps: newSteps,
+      });
+    }
   };
 
   // Przejście do następnego kroku
@@ -235,7 +314,7 @@ const NewRecipe: React.FC = () => {
         const updatedUserIngredients = await fetchUserIngredients();
         console.log(
           'Zaktualizowane składniki użytkownika:',
-          updatedUserIngredients
+          updatedUserIngredients,
         );
 
         // Połącz wszystkie składniki (publiczne + użytkownika) dla KrokiForm
@@ -249,7 +328,7 @@ const NewRecipe: React.FC = () => {
       } catch (error) {
         console.error(
           'Błąd podczas pobierania składników przed przejściem do kroków:',
-          error
+          error,
         );
         // Mimo błędu, pozwól przejść dalej z istniejącymi danymi
         setCurrentStep('kroki');
@@ -286,15 +365,47 @@ const NewRecipe: React.FC = () => {
         );
       case 'kroki':
         return (
-          <KrokiForm
-            handlePrevStep={handlePrevStep}
-            handleFinish={handleFinish}
-            stepsList={formData.steps}
-            ingredientsList={allIngredients} // Zawiera już połączone składniki publiczne + użytkownika
-            addStep={addStep}
-            updateStepsList={updateStepsList}
-            isLoading={isLoading}
-          />
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={formData.steps.map((step) => step.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              <KrokiForm
+                handlePrevStep={handlePrevStep}
+                handleFinish={handleFinish}
+                stepsList={formData.steps}
+                ingredientsList={allIngredients}
+                addStep={addStep}
+                removeStep={removeStep}
+                getIngredientName={getIngredientName}
+                isLoading={isLoading}
+              />
+            </SortableContext>
+
+            <DragOverlay>
+              {activeStep ? (
+                <div className="opacity-90 rotate-2 shadow-lg">
+                  <RecipeStepCard
+                    step={activeStep}
+                    stepNumber={
+                      formData.steps.findIndex((s) => s.id === activeStep.id) +
+                      1
+                    }
+                    getIngredientName={getIngredientName}
+                    onRemove={() => {}}
+                    id={activeStep.id}
+                    isDragOverlay
+                    isDisabled={false}
+                  />
+                </div>
+              ) : null}
+            </DragOverlay>
+          </DndContext>
         );
       default:
         return null;
