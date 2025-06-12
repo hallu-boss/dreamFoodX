@@ -1,18 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import {
-  Star,
-  Calendar,
-  Filter,
-  Grid,
-  List,
-  ChevronDown,
-  Search,
-  X,
-} from 'lucide-react';
+import { Filter, Grid, List, ChevronDown, Search, X } from 'lucide-react';
 import RecipeCard from '../components/RecipeCard';
-
-
 
 // Interfejsy (te same co w Home.tsx)
 interface RecipeAuthor {
@@ -49,18 +38,15 @@ interface RecipeResponse {
   type: string;
 }
 
-// Definicje kategorii i opcji sortowania
+// ✅ Polskie nazwy kategorii dla UI
 const CATEGORIES = [
   'Wszystkie',
+  'Desery',
   'Śniadania',
   'Obiady',
-  'Kolacje',
-  'Desery',
-  'Napoje',
   'Przekąski',
-  'Wegetariańskie',
-  'Wegańskie',
-  'Bezglutenowe',
+  'Napoje',
+  'Dodatki',
 ];
 
 const SORT_OPTIONS = [
@@ -80,11 +66,11 @@ const FILTER_TYPES = [
 ];
 
 const RecipesPage: React.FC = () => {
-  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Stan strony
   const [recipes, setRecipes] = useState<RecipeCover[]>([]);
+  const [allRecipes, setAllRecipes] = useState<RecipeCover[]>([]); // ✅ DODANE: Wszystkie przepisy z backendu
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -98,23 +84,44 @@ const RecipesPage: React.FC = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showFilters, setShowFilters] = useState(false);
 
+  // ✅ MAPOWANIE kategorii polskie nazwy <-> wartości z bazy
+  const categoryMapping: Record<string, string> = {
+    Wszystkie: '',
+    Desery: 'deser',
+    Śniadania: 'sniadanie',
+    Obiady: 'obiad',
+    Przekąski: 'przekąska',
+    Napoje: 'napój',
+    Dodatki: 'dodatek',
+  };
+
+  const reverseCategoryMapping: Record<string, string> = {
+    deser: 'Desery',
+    sniadanie: 'Śniadania',
+    obiad: 'Obiady',
+    przekąska: 'Przekąski',
+    napój: 'Napoje',
+    dodatek: 'Dodatki',
+  };
+
   // Pobierz parametry z URL przy inicjalizacji
   useEffect(() => {
     const type = searchParams.get('type') || '';
-    const category = searchParams.get('category') || 'Wszystkie';
+    const categoryFromUrl = searchParams.get('category') || '';
     const search = searchParams.get('search') || '';
     const sort = searchParams.get('sort') || 'newest';
     const page = parseInt(searchParams.get('page') || '1');
 
     setSelectedType(type);
-    setSelectedCategory(category);
+    // Mapuj wartość z URL na polską nazwę
+    setSelectedCategory(reverseCategoryMapping[categoryFromUrl] || 'Wszystkie');
     setSearchQuery(search);
     setSortBy(sort);
     setCurrentPage(page);
   }, [searchParams]);
 
-  // Funkcja do pobierania przepisów
-  const fetchRecipes = async () => {
+  // ✅ POBIERANIE wszystkich przepisów z backendu (bez filtrowania kategorii)
+  const fetchAllRecipes = async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
@@ -126,15 +133,17 @@ const RecipesPage: React.FC = () => {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      // Przygotuj parametry URL
+      // Przygotuj parametry URL - BEZ kategorii i 'free'
       const params = new URLSearchParams();
-      if (selectedType && selectedType !== '')
+
+      // Wysyłaj tylko 'new', 'popular', 'featured' do backendu
+      if (selectedType && selectedType !== '' && selectedType !== 'free') {
         params.append('type', selectedType);
-      if (selectedCategory && selectedCategory !== 'Wszystkie')
-        params.append('category', selectedCategory);
+      }
+
       if (searchQuery) params.append('search', searchQuery);
-      params.append('page', currentPage.toString());
-      params.append('limit', '16');
+      params.append('page', '1'); // Pobierz wszystkie strony
+      params.append('limit', '100'); // Zwiększ limit aby pobrać więcej przepisów
 
       const response = await fetch(`/api/recipe/covers?${params.toString()}`, {
         method: 'GET',
@@ -146,40 +155,82 @@ const RecipesPage: React.FC = () => {
       }
 
       const data: RecipeResponse = await response.json();
-
-      // Sortowanie po stronie klienta (jeśli backend nie obsługuje)
-      let sortedRecipes = [...data.recipes];
-      switch (sortBy) {
-        case 'rating':
-          sortedRecipes.sort((a, b) => b.averageRating - a.averageRating);
-          break;
-        case 'price-low':
-          sortedRecipes.sort((a, b) => a.price - b.price);
-          break;
-        case 'price-high':
-          sortedRecipes.sort((a, b) => b.price - a.price);
-          break;
-        case 'popular':
-          sortedRecipes.sort((a, b) => b.reviewsCount - a.reviewsCount);
-          break;
-        // 'newest' jest domyślne z backendu
-      }
-
-      setRecipes(sortedRecipes);
-      setTotalPages(data.pagination.totalPages);
-      setTotalRecipes(data.pagination.total);
+      setAllRecipes(data.recipes);
     } catch (error) {
       console.error('Błąd pobierania przepisów:', error);
-      setRecipes([]);
+      setAllRecipes([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // Pobierz przepisy przy zmianie filtrów
+  // ✅ FILTROWANIE i PAGINACJA po stronie frontendu
+  const filterAndPaginateRecipes = () => {
+    let filteredRecipes = [...allRecipes];
+
+    // 1. Filtruj według kategorii
+    if (selectedCategory !== 'Wszystkie') {
+      const categoryValue = categoryMapping[selectedCategory];
+      filteredRecipes = filteredRecipes.filter(
+        (recipe) =>
+          recipe.category.toLowerCase() === categoryValue.toLowerCase(),
+      );
+    }
+
+    // 2. Filtruj darmowe przepisy
+    if (selectedType === 'free') {
+      filteredRecipes = filteredRecipes.filter((recipe) => recipe.price === 0);
+    }
+
+    // 3. Sortowanie
+    switch (sortBy) {
+      case 'rating':
+        filteredRecipes.sort((a, b) => b.averageRating - a.averageRating);
+        break;
+      case 'price-low':
+        filteredRecipes.sort((a, b) => a.price - b.price);
+        break;
+      case 'price-high':
+        filteredRecipes.sort((a, b) => b.price - a.price);
+        break;
+      case 'popular':
+        filteredRecipes.sort((a, b) => b.reviewsCount - a.reviewsCount);
+        break;
+      case 'newest':
+      default:
+        filteredRecipes.sort((a, b) => {
+          const dateA = new Date(a.createdAt.split('.').reverse().join('-'));
+          const dateB = new Date(b.createdAt.split('.').reverse().join('-'));
+          return dateB.getTime() - dateA.getTime();
+        });
+        break;
+    }
+
+    // 4. Paginacja
+    const itemsPerPage = 16;
+    const totalFiltered = filteredRecipes.length;
+    const totalPagesCalculated = Math.ceil(totalFiltered / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedRecipes = filteredRecipes.slice(startIndex, endIndex);
+
+    // 5. Aktualizuj stan
+    setRecipes(paginatedRecipes);
+    setTotalPages(totalPagesCalculated);
+    setTotalRecipes(totalFiltered);
+  };
+
+  // Pobierz wszystkie przepisy przy zmianie typu, wyszukiwania
   useEffect(() => {
-    fetchRecipes();
-  }, [selectedType, selectedCategory, searchQuery, currentPage, sortBy]);
+    fetchAllRecipes();
+  }, [selectedType, searchQuery]);
+
+  // Filtruj i paginuj przy zmianie filtrów lub strony
+  useEffect(() => {
+    if (allRecipes.length > 0) {
+      filterAndPaginateRecipes();
+    }
+  }, [allRecipes, selectedCategory, selectedType, sortBy, currentPage]);
 
   // Aktualizuj URL przy zmianie filtrów
   const updateURL = (updates: Record<string, string>) => {
@@ -210,7 +261,8 @@ const RecipesPage: React.FC = () => {
 
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
-    updateURL({ category: category === 'Wszystkie' ? '' : category });
+    const categoryValue = categoryMapping[category];
+    updateURL({ category: categoryValue || '' });
   };
 
   const handleSortChange = (sort: string) => {

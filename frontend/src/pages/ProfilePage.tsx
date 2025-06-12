@@ -131,11 +131,11 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userData, logoutUser }) => {
 
   const toggleRecipeVisibility = async (
     recipeId: number,
-    currentVisibility: boolean
+    currentVisibility: boolean,
   ) => {
     // TODO: Implementacja zmiany widoczności przepisu
     console.log(
-      `Toggle visibility for recipe ${recipeId}: ${!currentVisibility}`
+      `Toggle visibility for recipe ${recipeId}: ${!currentVisibility}`,
     );
   };
 
@@ -160,7 +160,11 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ userData, logoutUser }) => {
           </h2>
           <p className="text-gray-600 mb-4">{error}</p>
           <button
-            onClick={() => navigate('/')}
+            onClick={() => {
+              logoutUser();
+              navigate('/');
+              return;
+            }}
             className="px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors"
           >
             Powrót do strony głównej
